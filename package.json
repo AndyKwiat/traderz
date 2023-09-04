@@ -1,0 +1,17 @@
+{
+  "devDependencies": {
+    "nodemon": "^3.0.1",
+    "ts-node": "^10.9.1",
+    "webpack": "^5.88.2",
+    "webpack-cli": "^5.1.4"
+  },
+  "dependencies": {
+    "esbuild": "0.19.2"
+  },
+
+  "scripts": {
+    "dev": "nodemon",
+    "start": "tsc"
+  }
+
+}

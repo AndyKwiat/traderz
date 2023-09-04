@@ -1,0 +1,21 @@
+# Node.js
+node_modules/
+
+# Compiled output
+dist/
+build/
+bin/
+
+# TypeScript cache
+.tsbuildinfo
+
+# macOS
+.DS_Store
+
+# Editor/IDE specific
+.vscode/
+.idea/
+
+# Logs and testing files
+*.log
+*.test.ts
