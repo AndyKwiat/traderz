@@ -23,8 +23,8 @@ shipImg.src = "shipblue.png";
 document.addEventListener("keydown", (event: KeyboardEvent) => {
   if (event.key === " ") {
     console.log("space bar pressed");
-    AdvanceTurn(cities, ships);
-    redraw();
+    // AdvanceTurn(cities, ships);
+    // redraw();
   }
 });
 
@@ -150,6 +150,10 @@ function redraw() {
       // make dotted line
       ctx.setLineDash([5, 5]);
       ctx.stroke();
+      setTimeout(() => {
+        AdvanceTurn(cities, ships);
+        redraw();
+      }, 50);
     }
   }
 
