@@ -1,4 +1,4 @@
-import { CreateNodes, NodeType, City, Ship } from "./world.js";
+import { CreateNodes, NodeType, City, Ship, AdvanceTurn } from "./world.js";
 import { Coord } from "./utils.js";
 
 // Set up the canvas
@@ -13,15 +13,18 @@ let panX = canvas.width / 2;
 let panY = canvas.height / 2;
 let scale = 1;
 
-let nodes = CreateNodes(30, 800);
+let cities = CreateNodes(30, 800);
 let ships: Ship[] = [];
-ships.push(Ship.CreateShip("Laska", nodes[14]));
+ships.push(Ship.CreateShip("Laska", cities[14]));
 console.log("shipping the ship");
 const shipImg = new Image();
 shipImg.src = "shipblue.png";
 
 document.addEventListener("keydown", (event: KeyboardEvent) => {
   if (event.key === " ") {
+    console.log("space bar pressed");
+    AdvanceTurn(cities, ships);
+    redraw();
   }
 });
 
@@ -73,17 +76,17 @@ function redraw() {
   ctx.fillStyle = "rgba(255,255,0,0.5)";
   ctx.strokeStyle = "black";
 
-  for (let i = 0; i < nodes.length; i++) {
+  for (let i = 0; i < cities.length; i++) {
     ctx.beginPath();
     ctx.arc(
-      nodes[i].location.x,
-      nodes[i].location.y,
+      cities[i].location.x,
+      cities[i].location.y,
       NODE_RADIUS,
       0,
       2 * Math.PI
     );
     let clr = "rgba(255,255,0,0.5)";
-    switch (nodes[i].type) {
+    switch (cities[i].type) {
       case NodeType.Empty:
         clr = "white";
         break;
@@ -99,7 +102,7 @@ function redraw() {
     }
     ctx.fillStyle = clr;
     ctx.fill();
-    if (nodes[i] == curNode) {
+    if (cities[i] == curNode) {
       ctx.lineWidth = 5;
     } else {
       ctx.lineWidth = 2;
@@ -111,9 +114,9 @@ function redraw() {
     ctx.textAlign = "center";
     ctx.textBaseline = "top";
     ctx.fillText(
-      nodes[i].name,
-      nodes[i].location.x,
-      nodes[i].location.y + NODE_RADIUS,
+      cities[i].name,
+      cities[i].location.x,
+      cities[i].location.y + NODE_RADIUS,
       NODE_RADIUS * 25
     );
     // draw the node name in center of circle
@@ -122,9 +125,9 @@ function redraw() {
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     ctx.fillText(
-      nodes[i].id.toString(),
-      nodes[i].location.x,
-      nodes[i].location.y,
+      cities[i].id.toString(),
+      cities[i].location.x,
+      cities[i].location.y,
       NODE_RADIUS * 2
     );
   }
@@ -136,6 +139,18 @@ function redraw() {
       loc = ships[i].dockedCity!.location.add(-NODE_RADIUS, -NODE_RADIUS);
     }
     ctx.drawImage(shipImg, loc.x - 10, loc.y - 10, 20, 20);
+    if (ships[i].targetCity != null) {
+      ctx.beginPath();
+      ctx.moveTo(loc.x, loc.y);
+      ctx.lineTo(
+        ships[i].targetCity!.location.x,
+        ships[i].targetCity!.location.y
+      );
+      ctx.lineWidth = 2;
+      // make dotted line
+      ctx.setLineDash([5, 5]);
+      ctx.stroke();
+    }
   }
 
   // Restore the transformation state
@@ -172,8 +187,11 @@ function handleClick(event: any) {
 
   ctx.arc(x, y, 5, 0, Math.PI * 2);
   ctx.fill();
-  let clickedNode = coordToNode(nodes, new Coord(worldX, worldY));
-  let worldChaged = false;
+  let clickedCity = coordToNode(cities, new Coord(worldX, worldY));
+  if (clickedCity != null) {
+    let ship = ships[0];
+    ship.targetCity = clickedCity;
+  }
 
   redraw();
 }

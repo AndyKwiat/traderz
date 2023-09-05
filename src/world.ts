@@ -78,11 +78,33 @@ export class Ship {
     public location: Coord,
     public dockedCity: City | null,
     public targetCity: City | null
-  ) {}
+  ) {
+    this.location = new Coord(location.x, location.y);
+  }
   static CreateShip(name: string, city: City): Ship {
     //create random id
     // random number between 0 and 1000000
     const id = Math.floor(Math.random() * 1000000);
     return new Ship(name, id, city.location, city, null);
+  }
+}
+
+export function AdvanceTurn(cities: City[], ships: Ship[]) {
+  console.log("Advancing turn");
+  for (let s of ships) {
+    if (s.targetCity != null) {
+      if (s.location.distance(s.targetCity.location) < 25) {
+        s.dockedCity = s.targetCity;
+        s.targetCity = null;
+      } else {
+        s.dockedCity = null;
+        const deltaX = s.targetCity.location.x - s.location.x;
+        const deltaY = s.targetCity.location.y - s.location.y;
+        const angle = Math.atan2(deltaY, deltaX);
+        const speed = 20;
+        s.location.x += Math.cos(angle) * speed;
+        s.location.y += Math.sin(angle) * speed;
+      }
+    }
   }
 }
