@@ -1,3 +1,5 @@
+import { CityNames } from "./cityNames.js";
+
 export class Coord {
   constructor(public x: number, public y: number) {}
   public distance(other: Coord): number {
@@ -150,14 +152,14 @@ export function CreateNodes(nodeCount: number, radius: number): wNode[] {
     nodes.push(n);
   }
   for (let i = 0; i < 20; i++) {
-    pushNodesApart(nodes, 30);
+    pushNodesApart(nodes, 80);
   }
 
   // order nodes by x position
   nodes.sort((a, b) => a.location.x - b.location.x);
   // set node names and ids to match their index in the array
   for (let i = 0; i < nodes.length; i++) {
-    nodes[i].name = i.toString();
+    nodes[i].name = CityNames[i];
     nodes[i].id = i;
   }
 

@@ -19,7 +19,7 @@ let panX = canvas.width / 2;
 let panY = canvas.height / 2;
 let scale = 1;
 
-let nodes = CreateNodes(100, 400);
+let nodes = CreateNodes(30, 800);
 
 document.addEventListener("keydown", (event: KeyboardEvent) => {
   if (event.key === " ") {
@@ -30,7 +30,7 @@ document.addEventListener("keydown", (event: KeyboardEvent) => {
 canvas.addEventListener("wheel", (event) => {
   // Calculate the new scale based on the wheel event
   const deltaY = event.deltaY;
-  const scaleFactor = Math.sign(deltaY) > 0 ? 0.9 : 1.1;
+  const scaleFactor = Math.sign(deltaY) > 0 ? 0.97 : 1.03;
   scale *= scaleFactor;
 
   // Calculate the position of the mouse relative to the canvas
@@ -61,7 +61,9 @@ canvas.addEventListener("mousemove", (event) => {
 
 const NODE_RADIUS = 10;
 function redraw() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  /// draw blue background
+  ctx.fillStyle = "lightblue";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
   // Save the current transformation state
   ctx.save();
   // Apply the panning and scaling transformations
@@ -104,13 +106,24 @@ function redraw() {
       ctx.lineWidth = 2;
     }
     ctx.stroke();
+    // draw the node name below the circle
+    ctx.fillStyle = "black";
+    ctx.font = "28px Arial";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "top";
+    ctx.fillText(
+      nodes[i].name,
+      nodes[i].location.x,
+      nodes[i].location.y + NODE_RADIUS,
+      NODE_RADIUS * 25
+    );
     // draw the node name in center of circle
     ctx.fillStyle = "black";
     ctx.font = "10px Arial";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     ctx.fillText(
-      nodes[i].name,
+      nodes[i].id.toString(),
       nodes[i].location.x,
       nodes[i].location.y,
       NODE_RADIUS * 2
