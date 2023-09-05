@@ -1,11 +1,5 @@
-import {
-  CreateNodes,
-  NodeType,
-  wNode,
-  Coord,
-  Edge,
-  UpdateTravel,
-} from "./world.js";
+import { CreateNodes, NodeType, City, Ship } from "./world.js";
+import { Coord } from "./utils.js";
 
 // Set up the canvas
 const canvas = document.getElementById("canvas") as HTMLCanvasElement;
@@ -13,13 +7,18 @@ const messageBox = document.getElementById("message")!;
 
 const ctx = canvas.getContext("2d")!;
 
-let curNode: wNode | null;
+let curNode: City | null;
 // Initialize variables for panning and scaling
 let panX = canvas.width / 2;
 let panY = canvas.height / 2;
 let scale = 1;
 
 let nodes = CreateNodes(30, 800);
+let ships: Ship[] = [];
+ships.push(Ship.CreateShip("Laska", nodes[14]));
+console.log("shipping the ship");
+const shipImg = new Image();
+shipImg.src = "shipblue.png";
 
 document.addEventListener("keydown", (event: KeyboardEvent) => {
   if (event.key === " ") {
@@ -129,14 +128,23 @@ function redraw() {
       NODE_RADIUS * 2
     );
   }
+  // draw ships
+  for (let i = 0; i < ships.length; i++) {
+    let loc = ships[i].location;
+
+    if (ships[i].dockedCity != null) {
+      loc = ships[i].dockedCity!.location.add(-NODE_RADIUS, -NODE_RADIUS);
+    }
+    ctx.drawImage(shipImg, loc.x - 10, loc.y - 10, 20, 20);
+  }
 
   // Restore the transformation state
   ctx.restore();
 }
-function coordToNode(nodes: wNode[], spot: Coord): wNode | null {
+function coordToNode(nodes: City[], spot: Coord): City | null {
   const RAD_SQ = NODE_RADIUS * NODE_RADIUS;
   let foundNode = null;
-  nodes.forEach((node: wNode) => {
+  nodes.forEach((node: City) => {
     if (node.location.distanceSq(spot) <= RAD_SQ) {
       foundNode = node;
       return;

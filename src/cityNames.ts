@@ -15,7 +15,7 @@ export const CityNames = [
   "Nighthaven",
   "Oakenfort",
   "Pinecrest",
-  "Quicksilver",
+  "Quickshiver",
   "Ravenholm",
   "Stormwatch",
   "Talonreach",
