@@ -1,14 +1,22 @@
 import { CityNames } from "./cityNames.js";
 import { Coord, getRandomPointInsideCircle } from "./utils.js";
+const NUM_GOODS = 5;
+export const GoodsNames = ["Wood", "Stone", "Iron", "Gold", "Food"];
 
 export class City {
+  public prices: number[] = new Array(NUM_GOODS).fill(0);
   constructor(
     public name: string,
     public id: number,
 
     public location: Coord,
     public type: NodeType
-  ) {}
+  ) {
+    // create random prices for each good
+    for (let i = 0; i < NUM_GOODS; i++) {
+      this.prices[i] = Math.floor(Math.random() * 100);
+    }
+  }
 }
 
 export enum NodeType {

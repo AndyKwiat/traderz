@@ -1,4 +1,11 @@
-import { CreateNodes, NodeType, City, Ship, AdvanceTurn } from "./world.js";
+import {
+  CreateNodes,
+  NodeType,
+  City,
+  Ship,
+  AdvanceTurn,
+  GoodsNames,
+} from "./world.js";
 import { Coord } from "./utils.js";
 
 // Set up the canvas
@@ -47,7 +54,30 @@ canvas.addEventListener("wheel", (event) => {
   // Call the redraw function to update the canvas
   redraw();
 });
-const cityHoverMenu = document.getElementById("city-hover-menu");
+const cityHoverMenu = document.getElementById(
+  "city-hover-menu"
+) as HTMLDivElement;
+const cityHoverMenuTitle = cityHoverMenu.querySelector(
+  "#city-hover-menu-title"
+) as HTMLDivElement;
+// add divs for each good
+const cityHoverMenuGoods = cityHoverMenu.querySelector(
+  "#city-hover-menu-goods"
+) as HTMLDivElement;
+for (let i = 0; i < GoodsNames.length; i++) {
+  let div = document.createElement("div");
+  div.innerHTML = GoodsNames[i];
+  cityHoverMenuGoods.appendChild(div);
+  div.style.display = "inline-block";
+  div.style.width = "50%";
+  div = document.createElement("div");
+  div.innerHTML = "0";
+  cityHoverMenuGoods.appendChild(div);
+  div.style.display = "inline-block";
+  div.style.width = "50%";
+  div.setAttribute("id", "city-hover-menu-goods-count-" + i.toString());
+}
+
 // Function to handle mouse move event for panning
 canvas.addEventListener("mousemove", (event) => {
   // Check if the left mouse button is pressed
@@ -196,9 +226,16 @@ canvas.addEventListener("mousemove", (event) => {
       messageBox.innerHTML = foundNode.name;
 
       curNode = foundNode;
-      cityHoverMenu!.style.display = "block";
-      cityHoverMenu!.style.left = event.clientX + "px";
-      cityHoverMenu!.style.top = event.clientY + "px";
+      cityHoverMenuTitle.innerHTML = foundNode.name;
+      cityHoverMenu.style.display = "block";
+      cityHoverMenu.style.left = event.clientX + "px";
+      cityHoverMenu.style.top = event.clientY + "px";
+      for (let i = 0; i < curNode.prices.length; i++) {
+        let div = document.getElementById(
+          "city-hover-menu-goods-count-" + i.toString()
+        )!;
+        div.innerHTML = curNode.prices[i].toString();
+      }
     }
   } else {
     lastHoveredNode = null;
