@@ -1,6 +1,6 @@
 export class Coord {
   constructor(public x: number, public y: number) {}
-  public distance(other: Coord): number {
+  public distanceTo(other: Coord): number {
     const deltaX = this.x - other.x;
     const deltaY = this.y - other.y;
     return Math.sqrt(deltaX ** 2 + deltaY ** 2);
@@ -10,14 +10,23 @@ export class Coord {
     const deltaY = this.y - other.y;
     return deltaX ** 2 + deltaY ** 2;
   }
-  public add(x: number, y: number): Coord {
-    return new Coord(this.x + x, this.y + y);
-  }
-  public [Symbol.for("+")](other: Coord): Coord {
+
+  public add(other: Coord): Coord {
     return new Coord(this.x + other.x, this.y + other.y);
   }
-  public [Symbol.for("-")](other: Coord): Coord {
+
+  public subtract(other: Coord): Coord {
     return new Coord(this.x - other.x, this.y - other.y);
+  }
+  public length(): number {
+    return Math.sqrt(this.x ** 2 + this.y ** 2);
+  }
+  public scale(factor: number): Coord {
+    return new Coord(this.x * factor, this.y * factor);
+  }
+  public normalized(): Coord {
+    const len = this.length();
+    return new Coord(this.x / len, this.y / len);
   }
 }
 

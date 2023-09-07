@@ -90,20 +90,18 @@ export class Ship {
 }
 
 export function AdvanceTurn(cities: City[], ships: Ship[]) {
-  console.log("Advancing turn");
+  // console.log("Advancing turn");
   for (let s of ships) {
     if (s.targetCity != null) {
-      if (s.location.distance(s.targetCity.location) < 25) {
+      if (s.location.distanceTo(s.targetCity.location) < 25) {
         s.dockedCity = s.targetCity;
         s.targetCity = null;
       } else {
         s.dockedCity = null;
-        const deltaX = s.targetCity.location.x - s.location.x;
-        const deltaY = s.targetCity.location.y - s.location.y;
-        const angle = Math.atan2(deltaY, deltaX);
+        const delta = s.targetCity.location.subtract(s.location).normalized();
+
         const speed = 20;
-        s.location.x += Math.cos(angle) * speed;
-        s.location.y += Math.sin(angle) * speed;
+        s.location = s.location.add(delta.scale(speed));
       }
     }
   }

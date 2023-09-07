@@ -5,7 +5,7 @@ import { Coord } from "./utils.js";
 const canvas = document.getElementById("canvas") as HTMLCanvasElement;
 const messageBox = document.getElementById("message")!;
 
-const ctx = canvas.getContext("2d")!;
+const renderContext = canvas.getContext("2d")!;
 
 let curNode: City | null;
 // Initialize variables for panning and scaling
@@ -62,23 +62,24 @@ canvas.addEventListener("mousemove", (event) => {
 });
 
 const NODE_RADIUS = 10;
+const NODE_OFFSET = new Coord(-NODE_RADIUS, -NODE_RADIUS);
 function redraw() {
   /// draw blue background
-  ctx.fillStyle = "lightblue";
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  renderContext.fillStyle = "lightblue";
+  renderContext.fillRect(0, 0, canvas.width, canvas.height);
   // Save the current transformation state
-  ctx.save();
+  renderContext.save();
   // Apply the panning and scaling transformations
-  ctx.scale(scale, scale);
-  ctx.translate(panX, panY);
+  renderContext.scale(scale, scale);
+  renderContext.translate(panX, panY);
 
   // draw the nodes
-  ctx.fillStyle = "rgba(255,255,0,0.5)";
-  ctx.strokeStyle = "black";
+  renderContext.fillStyle = "rgba(255,255,0,0.5)";
+  renderContext.strokeStyle = "black";
 
   for (let i = 0; i < cities.length; i++) {
-    ctx.beginPath();
-    ctx.arc(
+    renderContext.beginPath();
+    renderContext.arc(
       cities[i].location.x,
       cities[i].location.y,
       NODE_RADIUS,
@@ -100,31 +101,31 @@ function redraw() {
         clr = "green";
         break;
     }
-    ctx.fillStyle = clr;
-    ctx.fill();
+    renderContext.fillStyle = clr;
+    renderContext.fill();
     if (cities[i] == curNode) {
-      ctx.lineWidth = 5;
+      renderContext.lineWidth = 5;
     } else {
-      ctx.lineWidth = 2;
+      renderContext.lineWidth = 2;
     }
-    ctx.stroke();
+    renderContext.stroke();
     // draw the node name below the circle
-    ctx.fillStyle = "black";
-    ctx.font = "28px Arial";
-    ctx.textAlign = "center";
-    ctx.textBaseline = "top";
-    ctx.fillText(
+    renderContext.fillStyle = "black";
+    renderContext.font = "28px Arial";
+    renderContext.textAlign = "center";
+    renderContext.textBaseline = "top";
+    renderContext.fillText(
       cities[i].name,
       cities[i].location.x,
       cities[i].location.y + NODE_RADIUS,
       NODE_RADIUS * 25
     );
     // draw the node name in center of circle
-    ctx.fillStyle = "black";
-    ctx.font = "10px Arial";
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillText(
+    renderContext.fillStyle = "black";
+    renderContext.font = "10px Arial";
+    renderContext.textAlign = "center";
+    renderContext.textBaseline = "middle";
+    renderContext.fillText(
       cities[i].id.toString(),
       cities[i].location.x,
       cities[i].location.y,
@@ -136,20 +137,21 @@ function redraw() {
     let loc = ships[i].location;
 
     if (ships[i].dockedCity != null) {
-      loc = ships[i].dockedCity!.location.add(-NODE_RADIUS, -NODE_RADIUS);
+      loc = ships[i].dockedCity!.location.add(NODE_OFFSET);
     }
-    ctx.drawImage(shipImg, loc.x - 10, loc.y - 10, 20, 20);
+
+    renderContext.drawImage(shipImg, loc.x - 10, loc.y - 10, 20, 20);
     if (ships[i].targetCity != null) {
-      ctx.beginPath();
-      ctx.moveTo(loc.x, loc.y);
-      ctx.lineTo(
+      renderContext.beginPath();
+      renderContext.moveTo(loc.x, loc.y);
+      renderContext.lineTo(
         ships[i].targetCity!.location.x,
         ships[i].targetCity!.location.y
       );
-      ctx.lineWidth = 2;
+      renderContext.lineWidth = 2;
       // make dotted line
-      ctx.setLineDash([5, 5]);
-      ctx.stroke();
+      renderContext.setLineDash([5, 5]);
+      renderContext.stroke();
       setTimeout(() => {
         AdvanceTurn(cities, ships);
         redraw();
@@ -158,10 +160,10 @@ function redraw() {
   }
 
   // Restore the transformation state
-  ctx.restore();
+  renderContext.restore();
 }
 function coordToNode(nodes: City[], spot: Coord): City | null {
-  const RAD_SQ = NODE_RADIUS * NODE_RADIUS;
+  const RAD_SQ = NODE_RADIUS * NODE_RADIUS * 4; // little extra padding
   let foundNode = null;
   nodes.forEach((node: City) => {
     if (node.location.distanceSq(spot) <= RAD_SQ) {
@@ -172,6 +174,23 @@ function coordToNode(nodes: City[], spot: Coord): City | null {
 
   return foundNode;
 }
+canvas.addEventListener("mousemove", (event) => {
+  const rect = canvas.getBoundingClientRect(); // Get the canvas position
+  const x = event.clientX - rect.left; // Calculate the x-coordinate of the click relative to the canvas
+  const y = event.clientY - rect.top; // Calculate the y-coordinate of the click relative to the canvas
+  const worldX = x / scale - panX;
+  const worldY = y / scale - panY;
+  let foundNode = coordToNode(cities, new Coord(worldX, worldY));
+
+  if (foundNode != null) {
+    messageBox.innerHTML = foundNode.name;
+    curNode = foundNode;
+  } else {
+    messageBox.innerHTML = "";
+    curNode = null;
+  }
+  // redraw();
+});
 function handleClick(event: any) {
   const canvas = event.target; // Get the canvas element
 
@@ -183,14 +202,6 @@ function handleClick(event: any) {
   const worldX = x / scale - panX;
   const worldY = y / scale - panY;
 
-  const ctx = canvas.getContext("2d"); // Get the 2D rendering context
-
-  // Draw a blue circle at the click location
-  ctx.beginPath();
-  ctx.fillStyle = "blue";
-
-  ctx.arc(x, y, 5, 0, Math.PI * 2);
-  ctx.fill();
   let clickedCity = coordToNode(cities, new Coord(worldX, worldY));
   if (clickedCity != null) {
     let ship = ships[0];
