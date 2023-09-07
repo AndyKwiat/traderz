@@ -16,7 +16,7 @@ let scale = 1;
 let cities = CreateNodes(30, 800);
 let ships: Ship[] = [];
 ships.push(Ship.CreateShip("Laska", cities[14]));
-console.log("shipping the ship");
+// console.log("shipping the ship");
 const shipImg = new Image();
 shipImg.src = "shipblue.png";
 
@@ -47,7 +47,7 @@ canvas.addEventListener("wheel", (event) => {
   // Call the redraw function to update the canvas
   redraw();
 });
-
+const cityHoverMenu = document.getElementById("city-hover-menu");
 // Function to handle mouse move event for panning
 canvas.addEventListener("mousemove", (event) => {
   // Check if the left mouse button is pressed
@@ -152,16 +152,22 @@ function redraw() {
       // make dotted line
       renderContext.setLineDash([5, 5]);
       renderContext.stroke();
-      setTimeout(() => {
-        AdvanceTurn(cities, ships);
-        redraw();
-      }, 50);
     }
   }
 
   // Restore the transformation state
   renderContext.restore();
 }
+
+function loop() {
+  if (ships[0].targetCity != null) {
+    AdvanceTurn(cities, ships);
+    redraw();
+  }
+  setTimeout(loop, 50);
+}
+loop();
+
 function coordToNode(nodes: City[], spot: Coord): City | null {
   const RAD_SQ = NODE_RADIUS * NODE_RADIUS * 4; // little extra padding
   let foundNode = null;
@@ -174,6 +180,8 @@ function coordToNode(nodes: City[], spot: Coord): City | null {
 
   return foundNode;
 }
+
+let lastHoveredNode: City | null = null;
 canvas.addEventListener("mousemove", (event) => {
   const rect = canvas.getBoundingClientRect(); // Get the canvas position
   const x = event.clientX - rect.left; // Calculate the x-coordinate of the click relative to the canvas
@@ -183,9 +191,19 @@ canvas.addEventListener("mousemove", (event) => {
   let foundNode = coordToNode(cities, new Coord(worldX, worldY));
 
   if (foundNode != null) {
-    messageBox.innerHTML = foundNode.name;
-    curNode = foundNode;
+    if (foundNode != lastHoveredNode) {
+      lastHoveredNode = foundNode;
+      messageBox.innerHTML = foundNode.name;
+
+      curNode = foundNode;
+      cityHoverMenu!.style.display = "block";
+      cityHoverMenu!.style.left = event.clientX + "px";
+      cityHoverMenu!.style.top = event.clientY + "px";
+    }
   } else {
+    lastHoveredNode = null;
+    cityHoverMenu!.style.display = "none";
+
     messageBox.innerHTML = "";
     curNode = null;
   }
