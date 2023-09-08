@@ -11,7 +11,9 @@
 
   "scripts": {
     "dev": "nodemon",
-    "start": "tsc"
+    "start": "tsc",
+    "build": "tsc && mkdir -p dist && mkdir -p dist/bin && cp bin/*.js dist/bin && cp index.html dist && cp favicon.ico dist"
+    
   }
 
 }
