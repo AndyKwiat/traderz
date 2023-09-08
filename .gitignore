@@ -15,6 +15,7 @@ bin/
 # Editor/IDE specific
 .vscode/
 .idea/
+.yarn/
 
 # Logs and testing files
 *.log
