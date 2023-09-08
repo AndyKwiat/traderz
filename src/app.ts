@@ -26,6 +26,10 @@ ships.push(Ship.CreateShip("Laska", cities[14]));
 // console.log("shipping the ship");
 const shipImg = new Image();
 shipImg.src = "shipblue.png";
+let imageLoaded = false;
+shipImg.onload = () => {
+  imageLoaded = true;
+};
 
 document.addEventListener("keydown", (event: KeyboardEvent) => {
   if (event.key === " ") {
@@ -169,8 +173,9 @@ function redraw() {
     if (ships[i].dockedCity != null) {
       loc = ships[i].dockedCity!.location.add(NODE_OFFSET);
     }
-
-    renderContext.drawImage(shipImg, loc.x - 10, loc.y - 10, 20, 20);
+    if (imageLoaded) {
+      renderContext.drawImage(shipImg, loc.x - 10, loc.y - 10, 20, 20);
+    }
     if (ships[i].targetCity != null) {
       renderContext.beginPath();
       renderContext.moveTo(loc.x, loc.y);
