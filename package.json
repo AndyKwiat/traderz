@@ -1,5 +1,6 @@
 {
   "devDependencies": {
+    "@types/node": "^20.5.9",
     "nodemon": "^3.0.1",
     "ts-node": "^10.9.1",
     "webpack": "^5.88.2",
@@ -8,12 +9,9 @@
   "dependencies": {
     "esbuild": "0.19.2"
   },
-
   "scripts": {
     "dev": "nodemon",
     "start": "tsc",
     "build": "tsc && mkdir -p dist && mkdir -p dist/bin && cp bin/*.js dist/bin && cp index.html dist && cp favicon.ico dist"
-    
   }
-
 }
