@@ -5,11 +5,14 @@ export const GoodsNames = ["Wood", "Stone", "Iron", "Gold", "Food"];
 
 export class City {
   public prices: number[] = new Array(NUM_GOODS).fill(0);
+  public goodCount: number = 50;
+  public goodPrice: number = 50;
   constructor(
     public name: string,
     public id: number,
 
     public location: Coord,
+
     public type: NodeType
   ) {
     // create random prices for each good
@@ -104,6 +107,7 @@ export function AdvanceTurn(cities: City[], ships: Ship[]) {
       if (s.location.distanceTo(s.targetCity.location) < 25) {
         s.dockedCity = s.targetCity;
         s.targetCity = null;
+        s.dockedCity.goodCount += 10;
       } else {
         s.dockedCity = null;
         const delta = s.targetCity.location.subtract(s.location).normalized();
@@ -112,5 +116,14 @@ export function AdvanceTurn(cities: City[], ships: Ship[]) {
         s.location = s.location.add(delta.scale(speed));
       }
     }
+  }
+
+  for (let c of cities) {
+    // update goodPrice
+    let expectedPrice = 100 - c.goodCount;
+    c.goodPrice = c.goodPrice * 0.9 + expectedPrice * 0.1;
+    c.goodPrice = Math.min(c.goodPrice, 100);
+    c.goodCount -= (0.1 * (101 - c.goodPrice)) / 100;
+    c.goodCount = Math.max(c.goodCount, 0);
   }
 }

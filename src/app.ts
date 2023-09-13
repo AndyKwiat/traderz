@@ -107,7 +107,7 @@ function redraw() {
   renderContext.scale(scale, scale);
   renderContext.translate(panX, panY);
 
-  // draw the nodes
+  // draw the cities
   renderContext.fillStyle = "rgba(255,255,0,0.5)";
   renderContext.strokeStyle = "black";
 
@@ -163,6 +163,25 @@ function redraw() {
       cities[i].id.toString(),
       cities[i].location.x,
       cities[i].location.y,
+      NODE_RADIUS * 2
+    );
+
+    // draw the node prices
+    renderContext.fillStyle = "black";
+    renderContext.font = "10px Arial";
+    renderContext.textAlign = "center";
+    renderContext.textBaseline = "bottom";
+
+    renderContext.fillText(
+      Math.ceil(cities[i].goodCount).toString(),
+      cities[i].location.x,
+      cities[i].location.y - NODE_RADIUS - 2 - 10,
+      NODE_RADIUS * 2
+    );
+    renderContext.fillText(
+      "$" + Math.ceil(cities[i].goodPrice).toString(),
+      cities[i].location.x,
+      cities[i].location.y - NODE_RADIUS - 2 - 20,
       NODE_RADIUS * 2
     );
   }
@@ -233,7 +252,7 @@ canvas.addEventListener("mousemove", (event) => {
       curNode = foundNode;
       cityHoverMenuTitle.innerHTML = foundNode.name;
       cityHoverMenu.style.display = "block";
-      cityHoverMenu.style.left = event.clientX + "px";
+      cityHoverMenu.style.left = event.clientX + NODE_RADIUS + "px";
       cityHoverMenu.style.top = event.clientY + "px";
       for (let i = 0; i < curNode.prices.length; i++) {
         let div = document.getElementById(
