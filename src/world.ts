@@ -29,6 +29,27 @@ export enum NodeType {
   Market = 3,
 }
 
+export class Ship {
+  public loaded: boolean = false;
+  public cash: number = 0;
+  constructor(
+    public name: string,
+    public id: number,
+
+    public location: Coord,
+    public dockedCity: City | null,
+    public targetCity: City | null
+  ) {
+    this.location = new Coord(location.x, location.y);
+  }
+  static CreateShip(name: string, city: City): Ship {
+    //create random id
+    // random number between 0 and 1000000
+    const id = Math.floor(Math.random() * 1000000);
+    return new Ship(name, id, city.location, city, null);
+  }
+}
+
 export function CreateNodes(nodeCount: number, radius: number): City[] {
   let nodes: City[] = [];
   for (let i = 0; i < nodeCount; i++) {
@@ -36,7 +57,7 @@ export function CreateNodes(nodeCount: number, radius: number): City[] {
       i.toString(),
       i,
       getRandomPointInsideCircle(radius),
-      Math.random() < 0.7 ? NodeType.Mine : NodeType.Factory
+      Math.random() < 0.7 ? NodeType.Factory : NodeType.Market
     );
     nodes.push(n);
   }
@@ -81,25 +102,6 @@ function pushNodesApart(nodes: City[], minDistance: number) {
   }
 }
 
-export class Ship {
-  constructor(
-    public name: string,
-    public id: number,
-
-    public location: Coord,
-    public dockedCity: City | null,
-    public targetCity: City | null
-  ) {
-    this.location = new Coord(location.x, location.y);
-  }
-  static CreateShip(name: string, city: City): Ship {
-    //create random id
-    // random number between 0 and 1000000
-    const id = Math.floor(Math.random() * 1000000);
-    return new Ship(name, id, city.location, city, null);
-  }
-}
-
 export function AdvanceTurn(cities: City[], ships: Ship[]) {
   // console.log("Advancing turn");
   for (let s of ships) {
@@ -107,7 +109,20 @@ export function AdvanceTurn(cities: City[], ships: Ship[]) {
       if (s.location.distanceTo(s.targetCity.location) < 25) {
         s.dockedCity = s.targetCity;
         s.targetCity = null;
-        s.dockedCity.goodCount += 10;
+        if (s.dockedCity.type == NodeType.Market) {
+          if (s.loaded) {
+            s.dockedCity.goodCount += 10;
+            s.loaded = false;
+            s.cash += s.dockedCity.goodPrice * 10;
+          }
+        }
+        if (s.dockedCity.type == NodeType.Factory) {
+          if (!s.loaded) {
+            s.dockedCity.goodCount -= 10;
+            s.loaded = true;
+            s.cash -= s.dockedCity.goodPrice * 10;
+          }
+        }
       } else {
         s.dockedCity = null;
         const delta = s.targetCity.location.subtract(s.location).normalized();
@@ -123,7 +138,12 @@ export function AdvanceTurn(cities: City[], ships: Ship[]) {
     let expectedPrice = 100 - c.goodCount;
     c.goodPrice = c.goodPrice * 0.9 + expectedPrice * 0.1;
     c.goodPrice = Math.min(c.goodPrice, 100);
-    c.goodCount -= (0.1 * (101 - c.goodPrice)) / 100;
+    if (c.type == NodeType.Market) {
+      c.goodCount -= (0.1 * (101 - c.goodPrice)) / 100;
+    }
+    if (c.type == NodeType.Factory) {
+      c.goodCount += 0.07;
+    }
     c.goodCount = Math.max(c.goodCount, 0);
   }
 }

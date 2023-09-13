@@ -207,6 +207,17 @@ function redraw() {
       renderContext.setLineDash([5, 5]);
       renderContext.stroke();
     }
+    // draw ship cash count below the ship
+    renderContext.fillStyle = "yellow";
+    renderContext.font = "28px Arial";
+    renderContext.textAlign = "center";
+    renderContext.textBaseline = "top";
+    renderContext.fillText(
+      "$" + Math.floor(ships[i].cash).toString(),
+      loc.x,
+      loc.y + NODE_RADIUS,
+      NODE_RADIUS * 25
+    );
   }
 
   // Restore the transformation state
