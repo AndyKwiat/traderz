@@ -31,7 +31,9 @@ export enum NodeType {
 
 export class Ship {
   public loaded: boolean = false;
+  public loadCost: number = 0;
   public cash: number = 0;
+  public isPlayer: boolean = false;
   constructor(
     public name: string,
     public id: number,
@@ -57,7 +59,7 @@ export function CreateNodes(nodeCount: number, radius: number): City[] {
       i.toString(),
       i,
       getRandomPointInsideCircle(radius),
-      Math.random() < 0.7 ? NodeType.Factory : NodeType.Market
+      Math.random() < 0.5 ? NodeType.Factory : NodeType.Market
     );
     nodes.push(n);
   }
@@ -110,16 +112,18 @@ export function AdvanceTurn(cities: City[], ships: Ship[]) {
         s.dockedCity = s.targetCity;
         s.targetCity = null;
         if (s.dockedCity.type == NodeType.Market) {
-          if (s.loaded) {
+          if (s.loaded && s.dockedCity.goodPrice > s.loadCost) {
             s.dockedCity.goodCount += 10;
             s.loaded = false;
             s.cash += s.dockedCity.goodPrice * 10;
+            s.loadCost = 0;
           }
         }
         if (s.dockedCity.type == NodeType.Factory) {
           if (!s.loaded) {
             s.dockedCity.goodCount -= 10;
             s.loaded = true;
+            s.loadCost = s.dockedCity.goodPrice;
             s.cash -= s.dockedCity.goodPrice * 10;
           }
         }
@@ -131,19 +135,71 @@ export function AdvanceTurn(cities: City[], ships: Ship[]) {
         s.location = s.location.add(delta.scale(speed));
       }
     }
+    if (s.dockedCity != null && !s.isPlayer) {
+      pickNextTarget(s, cities);
+    }
   }
 
+  let totalPriceMarket = 0;
+  let minPriceMarket = 101;
+  let maxPriceMarket = -1;
+  let totalPriceFactory = 0;
+  let minPriceFactory = 101;
+  let maxPriceFactory = -1;
   for (let c of cities) {
     // update goodPrice
     let expectedPrice = 100 - c.goodCount;
     c.goodPrice = c.goodPrice * 0.9 + expectedPrice * 0.1;
     c.goodPrice = Math.min(c.goodPrice, 100);
     if (c.type == NodeType.Market) {
-      c.goodCount -= (0.1 * (101 - c.goodPrice)) / 100;
+      c.goodCount -= (0.5 * (120 - c.goodPrice)) / 100;
+      totalPriceMarket += c.goodPrice;
+      minPriceMarket = Math.min(minPriceMarket, c.goodPrice);
+      maxPriceMarket = Math.max(maxPriceMarket, c.goodPrice);
     }
     if (c.type == NodeType.Factory) {
       c.goodCount += 0.07;
+      totalPriceFactory += c.goodPrice;
+      minPriceFactory = Math.min(minPriceFactory, c.goodPrice);
+      maxPriceFactory = Math.max(maxPriceFactory, c.goodPrice);
     }
     c.goodCount = Math.max(c.goodCount, 0);
+  }
+  return {
+    avgPriceMarket: Math.floor(totalPriceMarket / cities.length),
+    minPriceMarket: Math.floor(minPriceMarket),
+    maxPriceMarket: Math.floor(maxPriceMarket),
+    avgPriceFactory: Math.floor(totalPriceFactory / cities.length),
+    minPriceFactory: Math.floor(minPriceFactory),
+    maxPriceFactory: Math.floor(maxPriceFactory),
+  };
+}
+
+function pickNextTarget(s: Ship, cities: City[]) {
+  // pick a city based on distance and price of goods combined in a formula
+  let bestCity: City | null = null;
+  let bestScore = 0;
+  let targetType = NodeType.Factory;
+  let priceScale = -1;
+  if (s.loaded) {
+    targetType = NodeType.Market;
+    priceScale = 1.0;
+  }
+  for (let c of cities) {
+    if (c == s.dockedCity) {
+      continue;
+    }
+    if (c.type == targetType) {
+      const distance = c.location.distanceTo(s.location);
+      const price = c.goodPrice * priceScale;
+      const score = price - distance * 0.15 + Math.random() * 5;
+      if (score > bestScore || bestCity == null) {
+        bestScore = score;
+        bestCity = c;
+      }
+    }
+  }
+  if (bestCity != null) {
+    s.targetCity = bestCity;
   }
 }

@@ -23,12 +23,25 @@ let scale = 1;
 let cities = CreateNodes(30, 800);
 let ships: Ship[] = [];
 ships.push(Ship.CreateShip("Laska", cities[14]));
+for (let i = 0; i < 10; i++) {
+  ships.push(
+    Ship.CreateShip("Laska" + i.toString(), cities[(i + 10) % cities.length])
+  );
+}
+let stats: object;
+ships[0].isPlayer = true;
 // console.log("shipping the ship");
 const shipImg = new Image();
 shipImg.src = "shipblue.png";
 let imageLoaded = false;
+const shipImgCPU = new Image();
+shipImgCPU.src = "ship.png";
+let imageLoadedCPU = false;
 shipImg.onload = () => {
   imageLoaded = true;
+};
+shipImgCPU.onload = () => {
+  imageLoadedCPU = true;
 };
 
 document.addEventListener("keydown", (event: KeyboardEvent) => {
@@ -107,7 +120,7 @@ function redraw() {
   renderContext.scale(scale, scale);
   renderContext.translate(panX, panY);
 
-  // draw the cities
+  // draw cities
   renderContext.fillStyle = "rgba(255,255,0,0.5)";
   renderContext.strokeStyle = "black";
 
@@ -145,7 +158,7 @@ function redraw() {
     renderContext.stroke();
     // draw the node name below the circle
     renderContext.fillStyle = "black";
-    renderContext.font = "28px Arial";
+    renderContext.font = "14px Arial";
     renderContext.textAlign = "center";
     renderContext.textBaseline = "top";
     renderContext.fillText(
@@ -154,7 +167,7 @@ function redraw() {
       cities[i].location.y + NODE_RADIUS,
       NODE_RADIUS * 25
     );
-    // draw the node name in center of circle
+    // draw the node id in center of circle
     renderContext.fillStyle = "black";
     renderContext.font = "10px Arial";
     renderContext.textAlign = "center";
@@ -168,14 +181,14 @@ function redraw() {
 
     // draw the node prices
     renderContext.fillStyle = "black";
-    renderContext.font = "10px Arial";
+    renderContext.font = "20px Arial";
     renderContext.textAlign = "center";
     renderContext.textBaseline = "bottom";
 
     renderContext.fillText(
       Math.ceil(cities[i].goodCount).toString(),
       cities[i].location.x,
-      cities[i].location.y - NODE_RADIUS - 2 - 10,
+      cities[i].location.y - NODE_RADIUS - 2,
       NODE_RADIUS * 2
     );
     renderContext.fillText(
@@ -192,8 +205,11 @@ function redraw() {
     if (ships[i].dockedCity != null) {
       loc = ships[i].dockedCity!.location.add(NODE_OFFSET);
     }
-    if (imageLoaded) {
+    if (imageLoaded && ships[i].isPlayer) {
       renderContext.drawImage(shipImg, loc.x - 10, loc.y - 10, 20, 20);
+    }
+    if (imageLoadedCPU && !ships[i].isPlayer) {
+      renderContext.drawImage(shipImgCPU, loc.x - 10, loc.y - 10, 20, 20);
     }
     if (ships[i].targetCity != null) {
       renderContext.beginPath();
@@ -226,7 +242,10 @@ function redraw() {
 
 function loop() {
   if (ships[0].targetCity != null) {
-    AdvanceTurn(cities, ships);
+    let stats = AdvanceTurn(cities, ships);
+    console.log(
+      `market: ${stats.avgPriceMarket}, factory: ${stats.avgPriceFactory}`
+    );
     redraw();
   }
   setTimeout(loop, 50);
