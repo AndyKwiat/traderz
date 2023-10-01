@@ -8,8 +8,8 @@ import {
 } from "./world.js";
 import { Coord } from "./utils.js";
 const CITY_COUNT = 20;
-const AREA_RADIUS = 600;
-const NUM_SHIPS = 26;
+const AREA_RADIUS = 280;
+const NUM_SHIPS = 0;
 
 // Set up the canvas
 const canvas = document.getElementById("canvas") as HTMLCanvasElement;
@@ -23,32 +23,32 @@ let panX = canvas.width / 2;
 let panY = canvas.height / 2;
 let scale = 1;
 
-let cities = CreateNodes(CITY_COUNT, AREA_RADIUS);
+let { cities, lanes } = CreateNodes(CITY_COUNT, AREA_RADIUS);
 let ships: Ship[] = [];
-ships.push(Ship.CreateShip("Laska", cities[CITY_COUNT / 2]));
-for (let i = 0; i < NUM_SHIPS - 1; i++) {
-  ships.push(
-    Ship.CreateShip(
-      "Laska" + i.toString(),
-      cities[Math.floor(i + NUM_SHIPS / 2) % cities.length]
-    )
-  );
-}
+// ships.push(Ship.CreateShip("Laska", cities[CITY_COUNT / 2]));
+// for (let i = 0; i < NUM_SHIPS - 1; i++) {
+//   ships.push(
+//     Ship.CreateShip(
+//       "Laska" + i.toString(),
+//       cities[Math.floor(i + NUM_SHIPS / 2) % cities.length]
+//     )
+//   );
+// }
 let stats: object;
-ships[0].isPlayer = true;
-// console.log("shipping the ship");
-const shipImg = new Image();
-shipImg.src = "shipblue.png";
-let imageLoaded = false;
-const shipImgCPU = new Image();
-shipImgCPU.src = "ship.png";
-let imageLoadedCPU = false;
-shipImg.onload = () => {
-  imageLoaded = true;
-};
-shipImgCPU.onload = () => {
-  imageLoadedCPU = true;
-};
+// ships[0].isPlayer = true;
+// // console.log("shipping the ship");
+// const shipImg = new Image();
+// shipImg.src = "shipblue.png";
+// let imageLoaded = false;
+// const shipImgCPU = new Image();
+// shipImgCPU.src = "ship.png";
+// let imageLoadedCPU = false;
+// shipImg.onload = () => {
+//   imageLoaded = true;
+// };
+// shipImgCPU.onload = () => {
+//   imageLoadedCPU = true;
+// };
 
 document.addEventListener("keydown", (event: KeyboardEvent) => {
   if (event.key === " ") {
@@ -140,9 +140,26 @@ function redraw() {
   renderContext.scale(scale, scale);
   renderContext.translate(panX, panY);
 
+  // draw the lanes
+  renderContext.setLineDash([5, 5]);
+  renderContext.strokeStyle = "grey";
+  renderContext.lineWidth = 2;
+
+  for (let j = 0; j < lanes.length; j++) {
+    renderContext.beginPath();
+    renderContext.moveTo(lanes[j].start.location.x, lanes[j].start.location.y);
+    renderContext.lineTo(lanes[j].end.location.x, lanes[j].end.location.y);
+    // make the line dotted
+
+    // make the line light grey
+
+    renderContext.stroke();
+  }
+
   // draw cities
   renderContext.fillStyle = "rgba(255,255,0,0.5)";
   renderContext.strokeStyle = "black";
+  renderContext.setLineDash([0, 0]);
 
   for (let i = 0; i < cities.length; i++) {
     renderContext.beginPath();
@@ -198,26 +215,8 @@ function redraw() {
       cities[i].location.y,
       NODE_RADIUS * 2
     );
-
-    // draw the node prices
-    renderContext.fillStyle = "black";
-    renderContext.font = "20px Arial";
-    renderContext.textAlign = "center";
-    renderContext.textBaseline = "bottom";
-
-    renderContext.fillText(
-      Math.ceil(cities[i].goodCount).toString(),
-      cities[i].location.x,
-      cities[i].location.y - NODE_RADIUS - 2,
-      NODE_RADIUS * 2
-    );
-    renderContext.fillText(
-      "$" + Math.ceil(cities[i].goodPrice).toString(),
-      cities[i].location.x,
-      cities[i].location.y - NODE_RADIUS - 2 - 20,
-      NODE_RADIUS * 2
-    );
   }
+
   // draw ships
   for (let i = 0; i < ships.length; i++) {
     let loc = ships[i].location;
@@ -225,12 +224,12 @@ function redraw() {
     if (ships[i].dockedCity != null) {
       loc = ships[i].dockedCity!.location.add(NODE_OFFSET);
     }
-    if (imageLoaded && ships[i].isPlayer) {
-      renderContext.drawImage(shipImg, loc.x - 10, loc.y - 10, 20, 20);
-    }
-    if (imageLoadedCPU && !ships[i].isPlayer) {
-      renderContext.drawImage(shipImgCPU, loc.x - 10, loc.y - 10, 20, 20);
-    }
+    // if (imageLoaded && ships[i].isPlayer) {
+    //   renderContext.drawImage(shipImg, loc.x - 10, loc.y - 10, 20, 20);
+    // }
+    // if (imageLoadedCPU && !ships[i].isPlayer) {
+    //   renderContext.drawImage(shipImgCPU, loc.x - 10, loc.y - 10, 20, 20);
+    // }
     if (ships[i].targetCity != null) {
       renderContext.beginPath();
       renderContext.moveTo(loc.x, loc.y);
@@ -261,14 +260,14 @@ function redraw() {
 }
 
 function loop() {
-  if (ships[0].targetCity != null || nonStopTurn) {
-    let stats = AdvanceTurn(cities, ships);
-    // console.log(
-    //   `market: ${stats.avgPriceMarket}, factory: ${stats.avgPriceFactory}`
-    // );
-    redraw();
-  }
-  setTimeout(loop, 50);
+  // if (ships[0].targetCity != null || nonStopTurn) {
+  //   let stats = AdvanceTurn(cities, ships);
+  //   // console.log(
+  //   //   `market: ${stats.avgPriceMarket}, factory: ${stats.avgPriceFactory}`
+  //   // );
+  //   redraw();
+  // }
+  // setTimeout(loop, 50);
 }
 loop();
 
@@ -287,7 +286,6 @@ function coordToNode(nodes: City[], spot: Coord): City | null {
 cityHoverMenu!.style.display = "none";
 let lastHoveredNode: City | null = null;
 canvas.addEventListener("mousemove", (event) => {
-  return; // disable hover
   const rect = canvas.getBoundingClientRect(); // Get the canvas position
   const x = event.clientX - rect.left; // Calculate the x-coordinate of the click relative to the canvas
   const y = event.clientY - rect.top; // Calculate the y-coordinate of the click relative to the canvas
@@ -298,18 +296,18 @@ canvas.addEventListener("mousemove", (event) => {
   if (foundNode != null) {
     if (foundNode != lastHoveredNode) {
       lastHoveredNode = foundNode;
-      messageBox.innerHTML = foundNode.name;
+      messageBox.innerHTML = foundNode!.name;
 
       curNode = foundNode;
-      cityHoverMenuTitle.innerHTML = foundNode.name;
+      cityHoverMenuTitle.innerHTML = foundNode!.name;
       cityHoverMenu.style.display = "block";
       cityHoverMenu.style.left = event.clientX + NODE_RADIUS + "px";
       cityHoverMenu.style.top = event.clientY + "px";
-      for (let i = 0; i < curNode.prices.length; i++) {
+      for (let i = 0; i < curNode!.prices.length; i++) {
         let div = document.getElementById(
           "city-hover-menu-goods-count-" + i.toString()
         )!;
-        div.innerHTML = curNode.prices[i].toString();
+        div.innerHTML = curNode!.prices[i].toString();
       }
     }
   } else {
@@ -333,10 +331,10 @@ function handleClick(event: any) {
   const worldY = y / scale - panY;
 
   let clickedCity = coordToNode(cities, new Coord(worldX, worldY));
-  if (clickedCity != null) {
-    let ship = ships[0];
-    ship.targetCity = clickedCity;
-  }
+  // if (clickedCity != null) {
+  //   let ship = ships[0];
+  //   ship.targetCity = clickedCity;
+  // }
 
   redraw();
 }

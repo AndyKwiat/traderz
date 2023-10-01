@@ -21,6 +21,9 @@ export class City {
     }
   }
 }
+export class Lane {
+  constructor(public start: City, public end: City) {}
+}
 
 export enum NodeType {
   Empty = 0,
@@ -52,8 +55,11 @@ export class Ship {
   }
 }
 
-export function CreateNodes(nodeCount: number, radius: number): City[] {
-  let nodes: City[] = [];
+export function CreateNodes(
+  nodeCount: number,
+  radius: number
+): { cities: City[]; lanes: Lane[] } {
+  let cities: City[] = [];
   for (let i = 0; i < nodeCount; i++) {
     let n = new City(
       i.toString(),
@@ -61,21 +67,35 @@ export function CreateNodes(nodeCount: number, radius: number): City[] {
       getRandomPointInsideCircle(radius),
       Math.random() < 0.5 ? NodeType.Factory : NodeType.Market
     );
-    nodes.push(n);
+    cities.push(n);
   }
   for (let i = 0; i < 20; i++) {
-    pushNodesApart(nodes, 80);
+    pushNodesApart(cities, 80);
   }
 
   // order nodes by x position
-  nodes.sort((a, b) => a.location.x - b.location.x);
+  cities.sort((a, b) => a.location.x - b.location.x);
   // set node names and ids to match their index in the array
-  for (let i = 0; i < nodes.length; i++) {
-    nodes[i].name = CityNames[i];
-    nodes[i].id = i;
+  for (let i = 0; i < cities.length; i++) {
+    cities[i].name = CityNames[i];
+    cities[i].id = i;
   }
 
-  return nodes;
+  let lanes: Lane[] = new Array();
+  // for every node, see the closest 4 nodes and add a lane if it doesn't already exist
+  for (let i = 0; i < cities.length; i++) {
+    let nodeA = cities[i];
+    for (let j = i + 1; j < cities.length; j++) {
+      let nodeB = cities[j];
+      let distance = nodeA.location.distanceTo(nodeB.location);
+      if (distance < 150) {
+        let lane = new Lane(nodeA, nodeB);
+        lanes.push(lane);
+      }
+    }
+  }
+
+  return { cities, lanes };
 }
 
 function pushNodesApart(nodes: City[], minDistance: number) {
