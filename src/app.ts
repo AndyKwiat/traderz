@@ -7,6 +7,9 @@ import {
   GoodsNames,
 } from "./world.js";
 import { Coord } from "./utils.js";
+const CITY_COUNT = 20;
+const AREA_RADIUS = 600;
+const NUM_SHIPS = 26;
 
 // Set up the canvas
 const canvas = document.getElementById("canvas") as HTMLCanvasElement;
@@ -20,12 +23,15 @@ let panX = canvas.width / 2;
 let panY = canvas.height / 2;
 let scale = 1;
 
-let cities = CreateNodes(30, 800);
+let cities = CreateNodes(CITY_COUNT, AREA_RADIUS);
 let ships: Ship[] = [];
-ships.push(Ship.CreateShip("Laska", cities[14]));
-for (let i = 0; i < 10; i++) {
+ships.push(Ship.CreateShip("Laska", cities[CITY_COUNT / 2]));
+for (let i = 0; i < NUM_SHIPS - 1; i++) {
   ships.push(
-    Ship.CreateShip("Laska" + i.toString(), cities[(i + 10) % cities.length])
+    Ship.CreateShip(
+      "Laska" + i.toString(),
+      cities[Math.floor(i + NUM_SHIPS / 2) % cities.length]
+    )
   );
 }
 let stats: object;
@@ -49,6 +55,20 @@ document.addEventListener("keydown", (event: KeyboardEvent) => {
     console.log("space bar pressed");
     // AdvanceTurn(cities, ships);
     // redraw();
+  }
+});
+
+const nonStopTurnCheckbox = document.getElementById(
+  "turn-checkbox"
+) as HTMLInputElement;
+let nonStopTurn = false;
+nonStopTurnCheckbox.addEventListener("change", function () {
+  if (this.checked) {
+    console.log("Checkbox is checked.");
+    nonStopTurn = true;
+  } else {
+    console.log("Checkbox is not checked.");
+    nonStopTurn = false;
   }
 });
 
@@ -241,11 +261,11 @@ function redraw() {
 }
 
 function loop() {
-  if (ships[0].targetCity != null) {
+  if (ships[0].targetCity != null || nonStopTurn) {
     let stats = AdvanceTurn(cities, ships);
-    console.log(
-      `market: ${stats.avgPriceMarket}, factory: ${stats.avgPriceFactory}`
-    );
+    // console.log(
+    //   `market: ${stats.avgPriceMarket}, factory: ${stats.avgPriceFactory}`
+    // );
     redraw();
   }
   setTimeout(loop, 50);
@@ -264,9 +284,10 @@ function coordToNode(nodes: City[], spot: Coord): City | null {
 
   return foundNode;
 }
-
+cityHoverMenu!.style.display = "none";
 let lastHoveredNode: City | null = null;
 canvas.addEventListener("mousemove", (event) => {
+  return; // disable hover
   const rect = canvas.getBoundingClientRect(); // Get the canvas position
   const x = event.clientX - rect.left; // Calculate the x-coordinate of the click relative to the canvas
   const y = event.clientY - rect.top; // Calculate the y-coordinate of the click relative to the canvas

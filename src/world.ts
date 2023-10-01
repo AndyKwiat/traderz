@@ -5,7 +5,7 @@ export const GoodsNames = ["Wood", "Stone", "Iron", "Gold", "Food"];
 
 export class City {
   public prices: number[] = new Array(NUM_GOODS).fill(0);
-  public goodCount: number = 50;
+  public goodCount: number = 0;
   public goodPrice: number = 50;
   constructor(
     public name: string,
@@ -112,7 +112,10 @@ export function AdvanceTurn(cities: City[], ships: Ship[]) {
         s.dockedCity = s.targetCity;
         s.targetCity = null;
         if (s.dockedCity.type == NodeType.Market) {
-          if (s.loaded && s.dockedCity.goodPrice > s.loadCost) {
+          if (
+            s.loaded &&
+            (s.dockedCity.goodPrice * 1.1 > s.loadCost || s.isPlayer)
+          ) {
             s.dockedCity.goodCount += 10;
             s.loaded = false;
             s.cash += s.dockedCity.goodPrice * 10;
@@ -151,6 +154,7 @@ export function AdvanceTurn(cities: City[], ships: Ship[]) {
     let expectedPrice = 100 - c.goodCount;
     c.goodPrice = c.goodPrice * 0.9 + expectedPrice * 0.1;
     c.goodPrice = Math.min(c.goodPrice, 100);
+    c.goodPrice = Math.max(c.goodPrice, 0);
     if (c.type == NodeType.Market) {
       c.goodCount -= (0.5 * (120 - c.goodPrice)) / 100;
       totalPriceMarket += c.goodPrice;
@@ -158,7 +162,7 @@ export function AdvanceTurn(cities: City[], ships: Ship[]) {
       maxPriceMarket = Math.max(maxPriceMarket, c.goodPrice);
     }
     if (c.type == NodeType.Factory) {
-      c.goodCount += 0.07;
+      c.goodCount += 0.17;
       totalPriceFactory += c.goodPrice;
       minPriceFactory = Math.min(minPriceFactory, c.goodPrice);
       maxPriceFactory = Math.max(maxPriceFactory, c.goodPrice);
@@ -192,7 +196,7 @@ function pickNextTarget(s: Ship, cities: City[]) {
     if (c.type == targetType) {
       const distance = c.location.distanceTo(s.location);
       const price = c.goodPrice * priceScale;
-      const score = price - distance * 0.15 + Math.random() * 5;
+      const score = price - distance * 0.07 + Math.random() * 5;
       if (score > bestScore || bestCity == null) {
         bestScore = score;
         bestCity = c;
