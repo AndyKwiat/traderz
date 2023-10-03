@@ -7,6 +7,15 @@ export class City {
   public prices: number[] = new Array(NUM_GOODS).fill(0);
   public goodCount: number = 0;
   public goodPrice: number = 50;
+  public population: number = 0;
+  public maxPopulation: number = 15;
+  public growthRate: number = 0.1;
+  public neighbors: City[] = [];
+  public attractiveness(): number {
+    let a = 100;
+    a -= (this.population * 100) / this.maxPopulation;
+    return a;
+  }
   constructor(
     public name: string,
     public id: number,
@@ -19,6 +28,8 @@ export class City {
     for (let i = 0; i < NUM_GOODS; i++) {
       this.prices[i] = Math.floor(Math.random() * 100);
     }
+    this.growthRate = 0.1 + Math.random() * 0.2;
+    this.maxPopulation = 3 + Math.floor(Math.random() * 12);
   }
 }
 export class Lane {
@@ -91,6 +102,8 @@ export function CreateNodes(
       if (distance < 150) {
         let lane = new Lane(nodeA, nodeB);
         lanes.push(lane);
+        nodeA.neighbors.push(nodeB);
+        nodeB.neighbors.push(nodeA);
       }
     }
   }
@@ -126,104 +139,42 @@ function pushNodesApart(nodes: City[], minDistance: number) {
 
 export function AdvanceTurn(cities: City[], ships: Ship[]) {
   // console.log("Advancing turn");
-  for (let s of ships) {
-    if (s.targetCity != null) {
-      if (s.location.distanceTo(s.targetCity.location) < 25) {
-        s.dockedCity = s.targetCity;
-        s.targetCity = null;
-        if (s.dockedCity.type == NodeType.Market) {
-          if (
-            s.loaded &&
-            (s.dockedCity.goodPrice * 1.1 > s.loadCost || s.isPlayer)
-          ) {
-            s.dockedCity.goodCount += 10;
-            s.loaded = false;
-            s.cash += s.dockedCity.goodPrice * 10;
-            s.loadCost = 0;
-          }
-        }
-        if (s.dockedCity.type == NodeType.Factory) {
-          if (!s.loaded) {
-            s.dockedCity.goodCount -= 10;
-            s.loaded = true;
-            s.loadCost = s.dockedCity.goodPrice;
-            s.cash -= s.dockedCity.goodPrice * 10;
-          }
-        }
-      } else {
-        s.dockedCity = null;
-        const delta = s.targetCity.location.subtract(s.location).normalized();
-
-        const speed = 20;
-        s.location = s.location.add(delta.scale(speed));
+  // update each city
+  for (let c of cities) {
+    if (c.population > 0) {
+      c.population += 1;
+      if (c.population > c.maxPopulation) {
+        c.population -= 1;
       }
     }
-    if (s.dockedCity != null && !s.isPlayer) {
-      pickNextTarget(s, cities);
-    }
-  }
-
-  let totalPriceMarket = 0;
-  let minPriceMarket = 101;
-  let maxPriceMarket = -1;
-  let totalPriceFactory = 0;
-  let minPriceFactory = 101;
-  let maxPriceFactory = -1;
-  for (let c of cities) {
-    // update goodPrice
-    let expectedPrice = 100 - c.goodCount;
-    c.goodPrice = c.goodPrice * 0.9 + expectedPrice * 0.1;
-    c.goodPrice = Math.min(c.goodPrice, 100);
-    c.goodPrice = Math.max(c.goodPrice, 0);
-    if (c.type == NodeType.Market) {
-      c.goodCount -= (0.5 * (120 - c.goodPrice)) / 100;
-      totalPriceMarket += c.goodPrice;
-      minPriceMarket = Math.min(minPriceMarket, c.goodPrice);
-      maxPriceMarket = Math.max(maxPriceMarket, c.goodPrice);
-    }
-    if (c.type == NodeType.Factory) {
-      c.goodCount += 0.17;
-      totalPriceFactory += c.goodPrice;
-      minPriceFactory = Math.min(minPriceFactory, c.goodPrice);
-      maxPriceFactory = Math.max(maxPriceFactory, c.goodPrice);
-    }
-    c.goodCount = Math.max(c.goodCount, 0);
-  }
-  return {
-    avgPriceMarket: Math.floor(totalPriceMarket / cities.length),
-    minPriceMarket: Math.floor(minPriceMarket),
-    maxPriceMarket: Math.floor(maxPriceMarket),
-    avgPriceFactory: Math.floor(totalPriceFactory / cities.length),
-    minPriceFactory: Math.floor(minPriceFactory),
-    maxPriceFactory: Math.floor(maxPriceFactory),
-  };
-}
-
-function pickNextTarget(s: Ship, cities: City[]) {
-  // pick a city based on distance and price of goods combined in a formula
-  let bestCity: City | null = null;
-  let bestScore = 0;
-  let targetType = NodeType.Factory;
-  let priceScale = -1;
-  if (s.loaded) {
-    targetType = NodeType.Market;
-    priceScale = 1.0;
-  }
-  for (let c of cities) {
-    if (c == s.dockedCity) {
-      continue;
-    }
-    if (c.type == targetType) {
-      const distance = c.location.distanceTo(s.location);
-      const price = c.goodPrice * priceScale;
-      const score = price - distance * 0.07 + Math.random() * 5;
-      if (score > bestScore || bestCity == null) {
-        bestScore = score;
-        bestCity = c;
+    // pick the most attractive neighbor and move one population there if its more attractive
+    let mostAttractiveNeighbor = c;
+    for (let n of c.neighbors) {
+      if (n.attractiveness() > mostAttractiveNeighbor.attractiveness()) {
+        mostAttractiveNeighbor = n;
       }
     }
-  }
-  if (bestCity != null) {
-    s.targetCity = bestCity;
+    if (mostAttractiveNeighbor !== c) {
+      c.population -= 1;
+      mostAttractiveNeighbor.population += 1;
+    }
+    c.population = c.maxPopulation;
+
+    // if the ratio of goods to population is lower with a neighbor, move goods to the neighbor
+    if (c.population > 0 && c.goodCount > 0) {
+      for (let n of c.neighbors) {
+        let myRatio = c.goodCount / c.population;
+        if (n.population <= 0) continue;
+        let theirRatio = n.goodCount / n.population;
+        if (theirRatio * 1.2 < myRatio) {
+          let goodsToMove = 0.2; // Math.floor((myRatio - theirRatio) * n.population);
+          if (goodsToMove > c.goodCount) {
+            goodsToMove = c.goodCount;
+          }
+          c.goodCount -= goodsToMove;
+          n.goodCount += goodsToMove;
+        }
+      }
+    }
   }
 }

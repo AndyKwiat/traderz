@@ -24,6 +24,10 @@ let panY = canvas.height / 2;
 let scale = 1;
 
 let { cities, lanes } = CreateNodes(CITY_COUNT, AREA_RADIUS);
+cities[0].population = 1;
+cities[10].goodCount = 50;
+cities[14].goodCount = 50;
+
 let ships: Ship[] = [];
 // ships.push(Ship.CreateShip("Laska", cities[CITY_COUNT / 2]));
 // for (let i = 0; i < NUM_SHIPS - 1; i++) {
@@ -53,8 +57,8 @@ let stats: object;
 document.addEventListener("keydown", (event: KeyboardEvent) => {
   if (event.key === " ") {
     console.log("space bar pressed");
-    // AdvanceTurn(cities, ships);
-    // redraw();
+    AdvanceTurn(cities, ships);
+    redraw();
   }
 });
 
@@ -166,25 +170,16 @@ function redraw() {
     renderContext.arc(
       cities[i].location.x,
       cities[i].location.y,
-      NODE_RADIUS,
+      NODE_RADIUS + cities[i].maxPopulation * 0.5,
       0,
       2 * Math.PI
     );
     let clr = "rgba(255,255,0,0.5)";
-    switch (cities[i].type) {
-      case NodeType.Empty:
-        clr = "white";
-        break;
-      case NodeType.Mine:
-        clr = "gray";
-        break;
-      case NodeType.Factory:
-        clr = "red";
-        break;
-      case NodeType.Market:
-        clr = "green";
-        break;
+    clr = "white";
+    if (cities[i].population > 0) {
+      clr = "green";
     }
+
     renderContext.fillStyle = clr;
     renderContext.fill();
     if (cities[i] == curNode) {
@@ -204,13 +199,28 @@ function redraw() {
       cities[i].location.y + NODE_RADIUS,
       NODE_RADIUS * 25
     );
-    // draw the node id in center of circle
+    // draw good count above city
+    renderContext.fillStyle = "black";
+    renderContext.font = "14px Arial";
+    renderContext.textAlign = "center";
+    renderContext.textBaseline = "bottom";
+    renderContext.fillText(
+      ((cities[i].goodCount * 100) / cities[i].population)
+        .toFixed(1)
+        .toString(),
+      cities[i].location.x,
+      cities[i].location.y - NODE_RADIUS,
+      NODE_RADIUS * 25
+    );
+    // draw the population id in center of circle
     renderContext.fillStyle = "black";
     renderContext.font = "10px Arial";
     renderContext.textAlign = "center";
     renderContext.textBaseline = "middle";
+    // draw population to 1 decimal place
+
     renderContext.fillText(
-      cities[i].id.toString(),
+      cities[i].population.toFixed(0).toString(),
       cities[i].location.x,
       cities[i].location.y,
       NODE_RADIUS * 2
