@@ -24,7 +24,7 @@ let panY = canvas.height / 2;
 let scale = 1;
 
 let { cities, lanes } = CreateNodes(CITY_COUNT, AREA_RADIUS);
-cities[0].population = 1;
+cities[0].population = 20;
 cities[10].goodCount = 50;
 cities[14].goodCount = 50;
 
@@ -57,7 +57,7 @@ let stats: object;
 document.addEventListener("keydown", (event: KeyboardEvent) => {
   if (event.key === " ") {
     console.log("space bar pressed");
-    AdvanceTurn(cities, ships);
+    //AdvanceTurn(cities, ships);
     redraw();
   }
 });
@@ -160,72 +160,7 @@ function redraw() {
     renderContext.stroke();
   }
 
-  // draw cities
-  renderContext.fillStyle = "rgba(255,255,0,0.5)";
-  renderContext.strokeStyle = "black";
-  renderContext.setLineDash([0, 0]);
-
-  for (let i = 0; i < cities.length; i++) {
-    renderContext.beginPath();
-    renderContext.arc(
-      cities[i].location.x,
-      cities[i].location.y,
-      NODE_RADIUS + cities[i].maxPopulation * 0.5,
-      0,
-      2 * Math.PI
-    );
-    let clr = "rgba(255,255,0,0.5)";
-    clr = "white";
-    if (cities[i].population > 0) {
-      clr = "green";
-    }
-
-    renderContext.fillStyle = clr;
-    renderContext.fill();
-    if (cities[i] == curNode) {
-      renderContext.lineWidth = 5;
-    } else {
-      renderContext.lineWidth = 2;
-    }
-    renderContext.stroke();
-    // draw the node name below the circle
-    renderContext.fillStyle = "black";
-    renderContext.font = "14px Arial";
-    renderContext.textAlign = "center";
-    renderContext.textBaseline = "top";
-    renderContext.fillText(
-      cities[i].name,
-      cities[i].location.x,
-      cities[i].location.y + NODE_RADIUS,
-      NODE_RADIUS * 25
-    );
-    // draw good count above city
-    renderContext.fillStyle = "black";
-    renderContext.font = "14px Arial";
-    renderContext.textAlign = "center";
-    renderContext.textBaseline = "bottom";
-    renderContext.fillText(
-      ((cities[i].goodCount * 100) / cities[i].population)
-        .toFixed(1)
-        .toString(),
-      cities[i].location.x,
-      cities[i].location.y - NODE_RADIUS,
-      NODE_RADIUS * 25
-    );
-    // draw the population id in center of circle
-    renderContext.fillStyle = "black";
-    renderContext.font = "10px Arial";
-    renderContext.textAlign = "center";
-    renderContext.textBaseline = "middle";
-    // draw population to 1 decimal place
-
-    renderContext.fillText(
-      cities[i].population.toFixed(0).toString(),
-      cities[i].location.x,
-      cities[i].location.y,
-      NODE_RADIUS * 2
-    );
-  }
+  drawCities();
 
   // draw ships
   for (let i = 0; i < ships.length; i++) {
@@ -296,6 +231,7 @@ function coordToNode(nodes: City[], spot: Coord): City | null {
 cityHoverMenu!.style.display = "none";
 let lastHoveredNode: City | null = null;
 canvas.addEventListener("mousemove", (event) => {
+  return; // no hover menu for now
   const rect = canvas.getBoundingClientRect(); // Get the canvas position
   const x = event.clientX - rect.left; // Calculate the x-coordinate of the click relative to the canvas
   const y = event.clientY - rect.top; // Calculate the y-coordinate of the click relative to the canvas
@@ -312,7 +248,7 @@ canvas.addEventListener("mousemove", (event) => {
       cityHoverMenuTitle.innerHTML = foundNode!.name;
       cityHoverMenu.style.display = "block";
       cityHoverMenu.style.left = event.clientX + NODE_RADIUS + "px";
-      cityHoverMenu.style.top = event.clientY + "px";
+      cityHoverMenu.style.top = event.clientY + NODE_RADIUS + "px";
       for (let i = 0; i < curNode!.prices.length; i++) {
         let div = document.getElementById(
           "city-hover-menu-goods-count-" + i.toString()
@@ -341,10 +277,9 @@ function handleClick(event: any) {
   const worldY = y / scale - panY;
 
   let clickedCity = coordToNode(cities, new Coord(worldX, worldY));
-  // if (clickedCity != null) {
-  //   let ship = ships[0];
-  //   ship.targetCity = clickedCity;
-  // }
+  if (clickedCity != null) {
+    clickedCity.population += 1;
+  }
 
   redraw();
 }
@@ -352,3 +287,79 @@ function handleClick(event: any) {
 canvas.addEventListener("click", handleClick);
 
 redraw();
+
+function drawCities() {
+  // draw cities
+  renderContext.fillStyle = "rgba(255,255,0,0.5)";
+  renderContext.strokeStyle = "black";
+  renderContext.setLineDash([0, 0]);
+
+  for (let i = 0; i < cities.length; i++) {
+    renderContext.beginPath();
+    renderContext.arc(
+      cities[i].location.x,
+      cities[i].location.y,
+      NODE_RADIUS + cities[i].maxPopulation * 0.5,
+      0,
+      2 * Math.PI
+    );
+
+    let clr = "white";
+    switch (cities[i].type) {
+      case NodeType.Forest:
+        clr = "green";
+        break;
+      case NodeType.Plains:
+        clr = "yellow";
+        break;
+      case NodeType.Stone:
+        clr = "grey";
+        break;
+    }
+
+    renderContext.fillStyle = clr;
+    renderContext.fill();
+    if (cities[i] == curNode) {
+      renderContext.lineWidth = 5;
+    } else {
+      renderContext.lineWidth = 2;
+    }
+    renderContext.stroke();
+    // draw the node name below the circle
+    renderContext.fillStyle = "black";
+    renderContext.font = "14px Arial";
+    renderContext.textAlign = "center";
+    renderContext.textBaseline = "top";
+    renderContext.fillText(
+      cities[i].name,
+      cities[i].location.x,
+      cities[i].location.y + NODE_RADIUS,
+      NODE_RADIUS * 25
+    );
+    // draw good count above city
+    renderContext.fillStyle = "black";
+    renderContext.font = "14px Arial";
+    renderContext.textAlign = "center";
+    renderContext.textBaseline = "bottom";
+    renderContext.fillText(
+      // ((cities[i].goodCount * 100) / cities[i].population)
+      cities[i].goodCount.toFixed(1).toString(),
+      cities[i].location.x,
+      cities[i].location.y - NODE_RADIUS,
+      NODE_RADIUS * 25
+    );
+    // draw the population  in center of circle
+    renderContext.fillStyle = "black";
+    renderContext.font = "10px Arial";
+    renderContext.textAlign = "center";
+    renderContext.textBaseline = "middle";
+    // draw population to 1 decimal place
+
+    renderContext.fillText(
+      cities[i].population.toFixed(0).toString(),
+      cities[i].location.x,
+      cities[i].location.y,
+      NODE_RADIUS * 2
+    );
+  }
+}

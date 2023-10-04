@@ -12,9 +12,7 @@ export class City {
   public growthRate: number = 0.1;
   public neighbors: City[] = [];
   public attractiveness(): number {
-    let a = 100;
-    a -= (this.population * 100) / this.maxPopulation;
-    return a;
+    return this.goodCount;
   }
   constructor(
     public name: string,
@@ -38,9 +36,10 @@ export class Lane {
 
 export enum NodeType {
   Empty = 0,
-  Mine = 1,
-  Factory = 2,
-  Market = 3,
+  Forest = 1,
+  Plains = 2,
+  Stone = 3,
+  Mine = 4,
 }
 
 export class Ship {
@@ -72,12 +71,14 @@ export function CreateNodes(
 ): { cities: City[]; lanes: Lane[] } {
   let cities: City[] = [];
   for (let i = 0; i < nodeCount; i++) {
-    let n = new City(
-      i.toString(),
-      i,
-      getRandomPointInsideCircle(radius),
-      Math.random() < 0.5 ? NodeType.Factory : NodeType.Market
-    );
+    let pick = Math.random();
+    let type = NodeType.Forest;
+    if (pick < 0.33) {
+      type = NodeType.Plains;
+    } else if (pick < 0.66) {
+      type = NodeType.Stone;
+    }
+    let n = new City(i.toString(), i, getRandomPointInsideCircle(radius), type);
     cities.push(n);
   }
   for (let i = 0; i < 20; i++) {
@@ -138,43 +139,71 @@ function pushNodesApart(nodes: City[], minDistance: number) {
 }
 
 export function AdvanceTurn(cities: City[], ships: Ship[]) {
+  const ODDS_WANDERLUST = 10;
+  const ODDS_BABY = 10;
+  const ODDS_MERCHANT = ODDS_BABY + 20;
+
   // console.log("Advancing turn");
   // update each city
-  for (let c of cities) {
-    if (c.population > 0) {
-      c.population += 1;
-      if (c.population > c.maxPopulation) {
-        c.population -= 1;
-      }
-    }
-    // pick the most attractive neighbor and move one population there if its more attractive
-    let mostAttractiveNeighbor = c;
-    for (let n of c.neighbors) {
-      if (n.attractiveness() > mostAttractiveNeighbor.attractiveness()) {
-        mostAttractiveNeighbor = n;
-      }
-    }
-    if (mostAttractiveNeighbor !== c) {
-      c.population -= 1;
-      mostAttractiveNeighbor.population += 1;
-    }
-    c.population = c.maxPopulation;
 
-    // if the ratio of goods to population is lower with a neighbor, move goods to the neighbor
-    if (c.population > 0 && c.goodCount > 0) {
-      for (let n of c.neighbors) {
-        let myRatio = c.goodCount / c.population;
-        if (n.population <= 0) continue;
-        let theirRatio = n.goodCount / n.population;
-        if (theirRatio * 1.2 < myRatio) {
-          let goodsToMove = 0.2; // Math.floor((myRatio - theirRatio) * n.population);
-          if (goodsToMove > c.goodCount) {
-            goodsToMove = c.goodCount;
+  let commands = [];
+  for (let c of cities) {
+    for (let i = 0; i < c.population; i++) {
+      // simulate each citizen
+      // pick number betwen 1 and 100
+      let num = Math.floor(Math.random() * 100);
+      if (num < ODDS_WANDERLUST) {
+        // citizen wants to move
+        // pick a random neighbor
+        let neighbor =
+          c.neighbors[Math.floor(Math.random() * c.neighbors.length)];
+        // pick most attractive neighbor
+        for (let n of c.neighbors) {
+          if (n.attractiveness() > neighbor.attractiveness()) {
+            neighbor = n;
           }
-          c.goodCount -= goodsToMove;
-          n.goodCount += goodsToMove;
+        }
+        if (neighbor.population < neighbor.maxPopulation) {
+          // move citizen to neighbor
+          c.population--;
+          commands.push(() => {
+            let n = neighbor;
+            n.population++;
+          });
+        }
+      } else if (num < ODDS_BABY) {
+        // citizen wants to have a baby
+        if (c.population < c.maxPopulation && c.population >= 2) {
+          // have a baby
+          commands.push(() => {
+            let cit = c;
+            cit.population++;
+          });
+        }
+      } else if (num < ODDS_MERCHANT) {
+        // pick a random city with less goods than current city move goods to that city
+        let neighbor =
+          c.neighbors[Math.floor(Math.random() * c.neighbors.length)];
+        // pick most attractive neighbor
+        for (let n of c.neighbors) {
+          if (n.goodCount < neighbor.goodCount) {
+            neighbor = n;
+          }
+        }
+        if (neighbor.goodCount < c.goodCount) {
+          // move goods to neighbor
+          c.goodCount--;
+
+          commands.push(() => {
+            let n = neighbor;
+            n.goodCount++;
+          });
         }
       }
     }
+  }
+  // run all the commands
+  for (let c of commands) {
+    c();
   }
 }
