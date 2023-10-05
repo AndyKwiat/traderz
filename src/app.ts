@@ -1,9 +1,11 @@
 import { CreateNodes, NodeType, City, Ship, GoodsNames } from "./world.js";
+import { CurState, SetRedrawFunc } from "./states.js";
 import { Coord } from "./utils.js";
 const CITY_COUNT = 20;
 const AREA_RADIUS = 280;
 const NUM_SHIPS = 0;
 
+SetRedrawFunc(redraw);
 class TriggerBox {
   constructor(
     public x: number,
@@ -61,6 +63,10 @@ document.addEventListener("keydown", (event: KeyboardEvent) => {
     console.log("space bar pressed");
     //AdvanceTurn(cities, ships);
     redraw();
+  }
+  if (event.key === "Escape") {
+    CurState.EscapeClicked();
+    updateStateMessage();
   }
 });
 
@@ -136,7 +142,7 @@ canvas.addEventListener("mousemove", (event) => {
 
 const NODE_RADIUS = 10;
 const NODE_OFFSET = new Coord(-NODE_RADIUS, -NODE_RADIUS);
-function redraw() {
+export function redraw() {
   TriggerBoxes = [];
   /// draw blue background
   renderContext.fillStyle = "lightblue";
@@ -269,15 +275,17 @@ canvas.addEventListener("mousemove", (event) => {
   // redraw();
 });
 
+function updateStateMessage() {
+  messageBox.innerHTML = CurState.Message;
+}
 function OnCityGoodsBoxClicked(city: City, good: number) {
-  console.log("clicked on city goods box");
-  console.log(city);
-  console.log(good);
+  CurState.OnCityGoodsBoxClicked(city, good);
+  updateStateMessage();
 }
 
 function OnCityClicked(clickedCity: City) {
-  clickedCity.AttemptBuildHouse();
-  redraw();
+  CurState.OnCityClicked(clickedCity);
+  updateStateMessage();
 }
 function handleClick(event: any) {
   const canvas = event.target; // Get the canvas element
