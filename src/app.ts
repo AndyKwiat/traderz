@@ -155,8 +155,10 @@ export function redraw() {
 
   // draw the lanes
   renderContext.setLineDash([5, 5]);
-  renderContext.strokeStyle = "grey";
-  renderContext.lineWidth = 2;
+  // make the line grey with transparency
+
+  renderContext.strokeStyle = "rgba(0,0,0,0.2)";
+  renderContext.lineWidth = 1;
 
   for (let j = 0; j < lanes.length; j++) {
     renderContext.beginPath();
@@ -416,6 +418,12 @@ function drawCities() {
     showGood(0, -2.1, -0.1);
     showGood(1, 0.8, -0.8);
     showGood(2, 1.7, 0.5);
+    renderContext.fillText(
+      `im-${cities[i].ImportRoutes.length} ex-${cities[i].ExportRoutes.length})`,
+      cities[i].location.x + NODE_RADIUS,
+      cities[i].location.y + NODE_RADIUS * 3,
+      NODE_RADIUS * 25
+    );
 
     // draw the population  in center of circle
     renderContext.fillStyle = "black";
