@@ -1,19 +1,26 @@
 import { CityNames } from "./cityNames.js";
 import { Coord, getRandomPointInsideCircle } from "./utils.js";
-const NUM_GOODS = 5;
-export const GoodsNames = ["Wood", "Stone", "Iron", "Gold", "Food"];
-
+const NUM_GOODS = 3;
+export const GoodsNames = ["🪵", "🪨", "🌾"];
+class TradeRoute {
+  constructor(
+    public start: City,
+    public end: City,
+    public goodType: number,
+    public amount: number
+  ) {}
+}
 export class City {
-  public prices: number[] = new Array(NUM_GOODS).fill(0);
-  public goodCount: number = 0;
-  public goodPrice: number = 50;
+  public potentialGoodsProduction: number[] = new Array(NUM_GOODS).fill(0);
+  public goodsProduction: number[] = new Array(NUM_GOODS).fill(0);
+
+  public ExportRoutes: TradeRoute[] = [];
+  public ImportRoutes: TradeRoute[] = [];
+
   public population: number = 0;
-  public maxPopulation: number = 15;
-  public growthRate: number = 0.1;
+
   public neighbors: City[] = [];
-  public attractiveness(): number {
-    return this.goodCount;
-  }
+
   constructor(
     public name: string,
     public id: number,
@@ -21,14 +28,7 @@ export class City {
     public location: Coord,
 
     public type: NodeType
-  ) {
-    // create random prices for each good
-    for (let i = 0; i < NUM_GOODS; i++) {
-      this.prices[i] = Math.floor(Math.random() * 100);
-    }
-    this.growthRate = 0.1 + Math.random() * 0.2;
-    this.maxPopulation = 3 + Math.floor(Math.random() * 12);
-  }
+  ) {}
 }
 export class Lane {
   constructor(public start: City, public end: City) {}
@@ -135,75 +135,5 @@ function pushNodesApart(nodes: City[], minDistance: number) {
         nodeB.location.y -= pushY;
       }
     }
-  }
-}
-
-export function AdvanceTurn(cities: City[], ships: Ship[]) {
-  const ODDS_WANDERLUST = 10;
-  const ODDS_BABY = 10;
-  const ODDS_MERCHANT = ODDS_BABY + 20;
-
-  // console.log("Advancing turn");
-  // update each city
-
-  let commands = [];
-  for (let c of cities) {
-    for (let i = 0; i < c.population; i++) {
-      // simulate each citizen
-      // pick number betwen 1 and 100
-      let num = Math.floor(Math.random() * 100);
-      if (num < ODDS_WANDERLUST) {
-        // citizen wants to move
-        // pick a random neighbor
-        let neighbor =
-          c.neighbors[Math.floor(Math.random() * c.neighbors.length)];
-        // pick most attractive neighbor
-        for (let n of c.neighbors) {
-          if (n.attractiveness() > neighbor.attractiveness()) {
-            neighbor = n;
-          }
-        }
-        if (neighbor.population < neighbor.maxPopulation) {
-          // move citizen to neighbor
-          c.population--;
-          commands.push(() => {
-            let n = neighbor;
-            n.population++;
-          });
-        }
-      } else if (num < ODDS_BABY) {
-        // citizen wants to have a baby
-        if (c.population < c.maxPopulation && c.population >= 2) {
-          // have a baby
-          commands.push(() => {
-            let cit = c;
-            cit.population++;
-          });
-        }
-      } else if (num < ODDS_MERCHANT) {
-        // pick a random city with less goods than current city move goods to that city
-        let neighbor =
-          c.neighbors[Math.floor(Math.random() * c.neighbors.length)];
-        // pick most attractive neighbor
-        for (let n of c.neighbors) {
-          if (n.goodCount < neighbor.goodCount) {
-            neighbor = n;
-          }
-        }
-        if (neighbor.goodCount < c.goodCount) {
-          // move goods to neighbor
-          c.goodCount--;
-
-          commands.push(() => {
-            let n = neighbor;
-            n.goodCount++;
-          });
-        }
-      }
-    }
-  }
-  // run all the commands
-  for (let c of commands) {
-    c();
   }
 }

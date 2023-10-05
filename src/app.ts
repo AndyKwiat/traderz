@@ -1,11 +1,4 @@
-import {
-  CreateNodes,
-  NodeType,
-  City,
-  Ship,
-  AdvanceTurn,
-  GoodsNames,
-} from "./world.js";
+import { CreateNodes, NodeType, City, Ship, GoodsNames } from "./world.js";
 import { Coord } from "./utils.js";
 const CITY_COUNT = 20;
 const AREA_RADIUS = 280;
@@ -24,9 +17,6 @@ let panY = canvas.height / 2;
 let scale = 1;
 
 let { cities, lanes } = CreateNodes(CITY_COUNT, AREA_RADIUS);
-cities[0].population = 20;
-cities[10].goodCount = 50;
-cities[14].goodCount = 50;
 
 let ships: Ship[] = [];
 // ships.push(Ship.CreateShip("Laska", cities[CITY_COUNT / 2]));
@@ -249,12 +239,12 @@ canvas.addEventListener("mousemove", (event) => {
       cityHoverMenu.style.display = "block";
       cityHoverMenu.style.left = event.clientX + NODE_RADIUS + "px";
       cityHoverMenu.style.top = event.clientY + NODE_RADIUS + "px";
-      for (let i = 0; i < curNode!.prices.length; i++) {
-        let div = document.getElementById(
-          "city-hover-menu-goods-count-" + i.toString()
-        )!;
-        div.innerHTML = curNode!.prices[i].toString();
-      }
+      // for (let i = 0; i < curNode!.prices.length; i++) {
+      //   let div = document.getElementById(
+      //     "city-hover-menu-goods-count-" + i.toString()
+      //   )!;
+      //   div.innerHTML = curNode!.prices[i].toString();
+      // }
     }
   } else {
     lastHoveredNode = null;
@@ -299,7 +289,7 @@ function drawCities() {
     renderContext.arc(
       cities[i].location.x,
       cities[i].location.y,
-      NODE_RADIUS + cities[i].maxPopulation * 0.5,
+      NODE_RADIUS,
       0,
       2 * Math.PI
     );
@@ -338,19 +328,32 @@ function drawCities() {
     );
     // draw good count above city
     renderContext.fillStyle = "black";
-    renderContext.font = "14px Arial";
+    renderContext.font = "10px Arial";
     renderContext.textAlign = "center";
     renderContext.textBaseline = "bottom";
-    renderContext.fillText(
-      // ((cities[i].goodCount * 100) / cities[i].population)
-      cities[i].goodCount.toFixed(1).toString(),
-      cities[i].location.x,
-      cities[i].location.y - NODE_RADIUS,
-      NODE_RADIUS * 25
-    );
+    var showGood = (gn: number, x: number, y: number) => {
+      let cx = cities[i].location.x + NODE_RADIUS * x;
+      // gotta separate the text so the spacing is better
+      renderContext.fillText(
+        GoodsNames[gn],
+        cx,
+        cities[i].location.y + NODE_RADIUS * y,
+        NODE_RADIUS * 25
+      );
+      renderContext.fillText(
+        cities[i].goodsProduction[gn].toString(),
+        cx + 7,
+        cities[i].location.y + NODE_RADIUS * y,
+        NODE_RADIUS * 25
+      );
+    };
+    showGood(0, -2.1, -0.1);
+    showGood(1, 0.8, -0.8);
+    showGood(2, 1.7, 0.5);
+
     // draw the population  in center of circle
     renderContext.fillStyle = "black";
-    renderContext.font = "10px Arial";
+    renderContext.font = "14px Arial";
     renderContext.textAlign = "center";
     renderContext.textBaseline = "middle";
     // draw population to 1 decimal place
