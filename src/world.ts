@@ -43,6 +43,18 @@ export class City {
       this.goodsProduction[FOOD] += 2;
     }
   }
+  public AttemptExport(good: number, target: City): boolean {
+    if (this.goodsProduction[good] <= 0) {
+      return false;
+    }
+    this.goodsProduction[good]--;
+    let route = new TradeRoute(this, target, good, 1);
+    this.ExportRoutes.push(route);
+    target.ImportRoutes.push(route);
+    target.goodsProduction[good]++;
+
+    return true;
+  }
   public AttemptBuildHouse(): boolean {
     if (this.population < 1) {
       this.population++;

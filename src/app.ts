@@ -316,6 +316,9 @@ function handleClick(event: any) {
   let clickedCity = coordToNode(cities, new Coord(worldX, worldY));
   if (clickedCity != null) {
     OnCityClicked(clickedCity);
+  } else {
+    CurState.EscapeClicked();
+    updateStateMessage();
   }
 }
 
@@ -391,13 +394,13 @@ function drawCities() {
         cities[i].location.y + NODE_RADIUS * y,
         NODE_RADIUS * 25
       );
-      // draw rectangle around the text
-      renderContext.strokeRect(
-        cx - 7,
-        cities[i].location.y + NODE_RADIUS * y - 10,
-        14,
-        9
-      );
+      // // draw rectangle around the text
+      // renderContext.strokeRect(
+      //   cx - 7,
+      //   cities[i].location.y + NODE_RADIUS * y - 10,
+      //   14,
+      //   9
+      // );
       TriggerBoxes.push(
         new TriggerBox(
           cx - 7,

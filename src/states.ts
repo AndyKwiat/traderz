@@ -1,4 +1,4 @@
-import { City } from "./world.js";
+import { City, GoodsNames } from "./world.js";
 
 abstract class State {
   Message: string = "---";
@@ -23,20 +23,23 @@ class BuildHouses extends State {
 }
 
 class PickExportTarget extends State {
-  Message: string = "Click on a city to export to";
+  Message: string = `Click on a city to export ${
+    GoodsNames[this.goodToExport]
+  } from ${this.startCity.name}`;
   constructor(private startCity: City, private goodToExport: number) {
     super();
   }
   OnCityClicked(city: City): void {
+    this.startCity.AttemptExport(this.goodToExport, city);
+    redraw();
     // this.city.SetExportTarget(this.good, city);
     // SetState( new BuildHouses() );
   }
   OnCityGoodsBoxClicked(city: City, good: number): void {
-    // SetState( new PickExportTarget(city, good) );
+    SetState(new PickExportTarget(city, good));
   }
   EscapeClicked(): void {
     SetState(new BuildHouses());
-    redraw();
   }
 }
 function redraw() {
