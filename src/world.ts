@@ -1,6 +1,9 @@
 import { CityNames } from "./cityNames.js";
 import { Coord, getRandomPointInsideCircle } from "./utils.js";
 const NUM_GOODS = 3;
+const WOOD = 0;
+const STONE = 1;
+const FOOD = 2;
 export const GoodsNames = ["🪵", "🪨", "🌾"];
 class TradeRoute {
   constructor(
@@ -29,6 +32,45 @@ export class City {
 
     public type: NodeType
   ) {}
+  private IncreaseProduction() {
+    if (this.type == NodeType.Forest) {
+      this.goodsProduction[WOOD] += 2;
+    }
+    if (this.type == NodeType.Stone) {
+      this.goodsProduction[STONE] += 2;
+    }
+    if (this.type == NodeType.Plains) {
+      this.goodsProduction[FOOD] += 2;
+    }
+  }
+  public AttemptBuildHouse(): boolean {
+    if (this.population < 1) {
+      this.population++;
+      this.IncreaseProduction();
+      return true;
+    }
+    if (this.goodsProduction[WOOD] <= 0) {
+      return false;
+    }
+    let needFood = false;
+    if (this.population >= 3) {
+      needFood = true;
+    }
+
+    if (needFood && this.goodsProduction[FOOD] <= 0) {
+      return false;
+    }
+
+    this.goodsProduction[WOOD]--;
+    if (needFood) {
+      this.goodsProduction[FOOD]--;
+    }
+    this.population++;
+    this.IncreaseProduction();
+    return true;
+
+    return false;
+  }
 }
 export class Lane {
   constructor(public start: City, public end: City) {}

@@ -4,6 +4,18 @@ const CITY_COUNT = 20;
 const AREA_RADIUS = 280;
 const NUM_SHIPS = 0;
 
+class TriggerBox {
+  constructor(
+    public x: number,
+    public y: number,
+    public width: number,
+    public height: number,
+
+    public callback: Function | null
+  ) {}
+}
+let TriggerBoxes: TriggerBox[] = [];
+
 // Set up the canvas
 const canvas = document.getElementById("canvas") as HTMLCanvasElement;
 const messageBox = document.getElementById("message")!;
@@ -125,6 +137,7 @@ canvas.addEventListener("mousemove", (event) => {
 const NODE_RADIUS = 10;
 const NODE_OFFSET = new Coord(-NODE_RADIUS, -NODE_RADIUS);
 function redraw() {
+  TriggerBoxes = [];
   /// draw blue background
   renderContext.fillStyle = "lightblue";
   renderContext.fillRect(0, 0, canvas.width, canvas.height);
@@ -207,7 +220,7 @@ function loop() {
 loop();
 
 function coordToNode(nodes: City[], spot: Coord): City | null {
-  const RAD_SQ = NODE_RADIUS * NODE_RADIUS * 4; // little extra padding
+  const RAD_SQ = NODE_RADIUS * NODE_RADIUS; // little extra padding
   let foundNode = null;
   nodes.forEach((node: City) => {
     if (node.location.distanceSq(spot) <= RAD_SQ) {
@@ -255,6 +268,17 @@ canvas.addEventListener("mousemove", (event) => {
   }
   // redraw();
 });
+
+function OnCityGoodsBoxClicked(city: City, good: number) {
+  console.log("clicked on city goods box");
+  console.log(city);
+  console.log(good);
+}
+
+function OnCityClicked(clickedCity: City) {
+  clickedCity.AttemptBuildHouse();
+  redraw();
+}
 function handleClick(event: any) {
   const canvas = event.target; // Get the canvas element
 
@@ -266,12 +290,25 @@ function handleClick(event: any) {
   const worldX = x / scale - panX;
   const worldY = y / scale - panY;
 
-  let clickedCity = coordToNode(cities, new Coord(worldX, worldY));
-  if (clickedCity != null) {
-    clickedCity.population += 1;
+  // check intersection with trigger boxes
+  for (let i = 0; i < TriggerBoxes.length; i++) {
+    if (
+      TriggerBoxes[i].x <= worldX &&
+      TriggerBoxes[i].x + TriggerBoxes[i].width >= worldX &&
+      TriggerBoxes[i].y <= worldY &&
+      TriggerBoxes[i].y + TriggerBoxes[i].height >= worldY
+    ) {
+      if (TriggerBoxes[i].callback != null) {
+        TriggerBoxes[i].callback!();
+        return;
+      }
+    }
   }
 
-  redraw();
+  let clickedCity = coordToNode(cities, new Coord(worldX, worldY));
+  if (clickedCity != null) {
+    OnCityClicked(clickedCity);
+  }
 }
 
 canvas.addEventListener("click", handleClick);
@@ -345,6 +382,24 @@ function drawCities() {
         cx + 7,
         cities[i].location.y + NODE_RADIUS * y,
         NODE_RADIUS * 25
+      );
+      // draw rectangle around the text
+      renderContext.strokeRect(
+        cx - 7,
+        cities[i].location.y + NODE_RADIUS * y - 10,
+        14,
+        9
+      );
+      TriggerBoxes.push(
+        new TriggerBox(
+          cx - 7,
+          cities[i].location.y + NODE_RADIUS * y - 10,
+          14,
+          9,
+          () => {
+            OnCityGoodsBoxClicked(cities[i], gn);
+          }
+        )
       );
     };
     showGood(0, -2.1, -0.1);
