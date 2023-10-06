@@ -33,7 +33,7 @@ let panY = canvas.height / 2;
 let scale = 1;
 
 let { cities, lanes } = CreateNodes(CITY_COUNT, AREA_RADIUS, MIN_CITY_SPACING);
-
+cities[Math.floor(CITY_COUNT / 2)].discovered = true;
 let ships: Ship[] = [];
 // ships.push(Ship.CreateShip("Laska", cities[CITY_COUNT / 2]));
 // for (let i = 0; i < NUM_SHIPS - 1; i++) {
@@ -363,16 +363,18 @@ function drawCities() {
     );
 
     let clr = "white";
-    switch (cities[i].type) {
-      case NodeType.Forest:
-        clr = "green";
-        break;
-      case NodeType.Plains:
-        clr = "yellow";
-        break;
-      case NodeType.Stone:
-        clr = "grey";
-        break;
+    if (city.discovered) {
+      switch (city.type) {
+        case NodeType.Forest:
+          clr = "green";
+          break;
+        case NodeType.Plains:
+          clr = "yellow";
+          break;
+        case NodeType.Stone:
+          clr = "grey";
+          break;
+      }
     }
 
     renderContext.fillStyle = clr;
@@ -438,7 +440,10 @@ function drawCities() {
       showGood(1, 0.8, -0.8);
       showGood(2, 1.7, 0.5);
     }
-    if (city.ImportRoutes.length > 0 || city.ExportRoutes.length > 0) {
+    if (
+      false && // turn this off for now
+      (city.ImportRoutes.length > 0 || city.ExportRoutes.length > 0)
+    ) {
       renderContext.fillText(
         `im-${cities[i].ImportRoutes.length} ex-${cities[i].ExportRoutes.length})`,
         cities[i].location.x + NODE_RADIUS,

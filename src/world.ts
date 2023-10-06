@@ -21,6 +21,7 @@ export class City {
   public ImportRoutes: TradeRoute[] = [];
 
   public population: number = 0;
+  public discovered: boolean = false;
 
   public neighbors: City[] = [];
 

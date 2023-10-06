@@ -15,12 +15,19 @@ function SetState(state: State) {
 class BuildHouses extends State {
   Message: string = "Click on a city to build a house";
   OnCityClicked(city: City): void {
+    if (!city.discovered) return;
+    let built = false;
     for (let i = 0; i < LargeLoadScalar(); i++) {
       if (i == 1 && city.population == 1) break;
       if (i > 0 && city.primaryGoodsCount() < 2) {
         break;
       }
-      city.AttemptBuildHouse();
+      built = city.AttemptBuildHouse() || built;
+    }
+    if (built) {
+      for (let neighbor of city.neighbors) {
+        neighbor.discovered = true;
+      }
     }
     redraw();
   }
@@ -63,9 +70,6 @@ class PickExportTarget extends State {
     }
     redraw();
     this.lastClickedCity = city;
-
-    // this.city.SetExportTarget(this.good, city);
-    // SetState( new BuildHouses() );
   }
   OnCityGoodsBoxClicked(city: City, good: number): void {
     SetState(new PickExportTarget(city, good));
