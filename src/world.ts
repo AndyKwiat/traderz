@@ -1,9 +1,9 @@
 import { CityNames } from "./cityNames.js";
 import { Coord, getRandomPointInsideCircle } from "./utils.js";
 const NUM_GOODS = 3;
-const WOOD = 0;
-const STONE = 1;
-const FOOD = 2;
+export const WOOD = 0;
+export const STONE = 1;
+export const FOOD = 2;
 export const GoodsNames = ["🪵", "🪨", "🌾"];
 class TradeRoute {
   constructor(
@@ -32,6 +32,23 @@ export class City {
 
     public type: NodeType
   ) {}
+
+  public hasNeighbor(city: City): boolean {
+    return this.neighbors.includes(city);
+  }
+  public primaryGoodsCount(): number {
+    switch (this.type) {
+      case NodeType.Forest:
+        return this.goodsProduction[WOOD];
+      case NodeType.Plains:
+        return this.goodsProduction[FOOD];
+      case NodeType.Stone:
+        return this.goodsProduction[STONE];
+      default:
+        return 0;
+    }
+  }
+
   private IncreaseProduction() {
     if (this.type == NodeType.Forest) {
       this.goodsProduction[WOOD] += 2;
@@ -93,7 +110,6 @@ export enum NodeType {
   Forest = 1,
   Plains = 2,
   Stone = 3,
-  Mine = 4,
 }
 
 export class Ship {
@@ -121,7 +137,8 @@ export class Ship {
 
 export function CreateNodes(
   nodeCount: number,
-  radius: number
+  radius: number,
+  citySpacing: number
 ): { cities: City[]; lanes: Lane[] } {
   let cities: City[] = [];
   for (let i = 0; i < nodeCount; i++) {
@@ -136,7 +153,7 @@ export function CreateNodes(
     cities.push(n);
   }
   for (let i = 0; i < 20; i++) {
-    pushNodesApart(cities, 80);
+    pushNodesApart(cities, citySpacing);
   }
 
   // order nodes by x position

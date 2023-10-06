@@ -2,8 +2,10 @@ import { CreateNodes, NodeType, City, Ship, GoodsNames } from "./world.js";
 import { CurState, SetRedrawFunc } from "./states.js";
 import { Coord } from "./utils.js";
 const CITY_COUNT = 20;
-const AREA_RADIUS = 280;
+const AREA_RADIUS = 360;
+const MIN_CITY_SPACING = 50;
 const NUM_SHIPS = 0;
+const NODE_RADIUS = 10;
 
 SetRedrawFunc(redraw);
 class TriggerBox {
@@ -30,7 +32,7 @@ let panX = canvas.width / 2;
 let panY = canvas.height / 2;
 let scale = 1;
 
-let { cities, lanes } = CreateNodes(CITY_COUNT, AREA_RADIUS);
+let { cities, lanes } = CreateNodes(CITY_COUNT, AREA_RADIUS, MIN_CITY_SPACING);
 
 let ships: Ship[] = [];
 // ships.push(Ship.CreateShip("Laska", cities[CITY_COUNT / 2]));
@@ -61,6 +63,7 @@ let stats: object;
 document.addEventListener("keydown", (event: KeyboardEvent) => {
   if (event.key === " ") {
     console.log("space bar pressed");
+    ToggleLargeLoads();
     //AdvanceTurn(cities, ships);
     redraw();
   }
@@ -83,6 +86,11 @@ nonStopTurnCheckbox.addEventListener("change", function () {
     nonStopTurn = false;
   }
 });
+export let LargeLoads = true;
+function ToggleLargeLoads() {
+  LargeLoads = !LargeLoads;
+  updateStatus("LargeLoads", LargeLoads.toString());
+}
 
 // Function to handle mouse wheel event for scaling
 canvas.addEventListener("wheel", (event) => {
@@ -140,7 +148,6 @@ canvas.addEventListener("mousemove", (event) => {
   }
 });
 
-const NODE_RADIUS = 10;
 const NODE_OFFSET = new Coord(-NODE_RADIUS, -NODE_RADIUS);
 export function redraw() {
   TriggerBoxes = [];
@@ -280,6 +287,16 @@ canvas.addEventListener("mousemove", (event) => {
 function updateStateMessage() {
   messageBox.innerHTML = CurState.Message;
 }
+
+let status: { [key: string]: string } = {};
+function updateStatus(key: string, value: string) {
+  status[key] = value;
+  let str = "";
+  for (let key in status) {
+    str += key + ": " + status[key] + ",";
+  }
+  document.getElementById("status-message")!.innerHTML = str;
+}
 function OnCityGoodsBoxClicked(city: City, good: number) {
   CurState.OnCityGoodsBoxClicked(city, good);
   updateStateMessage();
@@ -335,6 +352,7 @@ function drawCities() {
   renderContext.setLineDash([0, 0]);
 
   for (let i = 0; i < cities.length; i++) {
+    let city = cities[i];
     renderContext.beginPath();
     renderContext.arc(
       cities[i].location.x,
@@ -415,15 +433,19 @@ function drawCities() {
         )
       );
     };
-    showGood(0, -2.1, -0.1);
-    showGood(1, 0.8, -0.8);
-    showGood(2, 1.7, 0.5);
-    renderContext.fillText(
-      `im-${cities[i].ImportRoutes.length} ex-${cities[i].ExportRoutes.length})`,
-      cities[i].location.x + NODE_RADIUS,
-      cities[i].location.y + NODE_RADIUS * 3,
-      NODE_RADIUS * 25
-    );
+    if (city.population > 0) {
+      showGood(0, -2.1, -0.1);
+      showGood(1, 0.8, -0.8);
+      showGood(2, 1.7, 0.5);
+    }
+    if (city.ImportRoutes.length > 0 || city.ExportRoutes.length > 0) {
+      renderContext.fillText(
+        `im-${cities[i].ImportRoutes.length} ex-${cities[i].ExportRoutes.length})`,
+        cities[i].location.x + NODE_RADIUS,
+        cities[i].location.y + NODE_RADIUS * 3,
+        NODE_RADIUS * 25
+      );
+    }
 
     // draw the population  in center of circle
     renderContext.fillStyle = "black";
