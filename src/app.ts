@@ -164,10 +164,33 @@ export function redraw() {
   renderContext.setLineDash([5, 5]);
   // make the line grey with transparency
 
-  renderContext.strokeStyle = "rgba(0,0,0,0.2)";
+  renderContext.strokeStyle = "rgba(0,0,0,0.08)";
   renderContext.lineWidth = 1;
 
   for (let j = 0; j < lanes.length; j++) {
+    // if both are not discovered don't show
+    if (!lanes[j].start.discovered || !lanes[j].end.discovered) continue;
+    // if both have no population don't show
+    if (lanes[j].start.population <= 0 && lanes[j].end.population <= 0)
+      continue;
+
+    // if there's an import route between the start and end cities don't draw the lane
+    let skip = false;
+    for (let i = 0; i < lanes[j].start.ImportRoutes.length; i++) {
+      if (lanes[j].start.ImportRoutes[i].start == lanes[j].end) {
+        skip = true;
+        break;
+      }
+    }
+    if (skip) continue;
+    for (let i = 0; i < lanes[j].start.ExportRoutes.length; i++) {
+      if (lanes[j].start.ExportRoutes[i].end == lanes[j].end) {
+        skip = true;
+        break;
+      }
+    }
+    if (skip) continue;
+
     renderContext.beginPath();
     renderContext.moveTo(lanes[j].start.location.x, lanes[j].start.location.y);
     renderContext.lineTo(lanes[j].end.location.x, lanes[j].end.location.y);
@@ -385,17 +408,20 @@ function drawCities() {
       renderContext.lineWidth = 2;
     }
     renderContext.stroke();
-    // draw the node name below the circle
-    renderContext.fillStyle = "black";
-    renderContext.font = "14px Arial";
-    renderContext.textAlign = "center";
-    renderContext.textBaseline = "top";
-    renderContext.fillText(
-      cities[i].name,
-      cities[i].location.x,
-      cities[i].location.y + NODE_RADIUS,
-      NODE_RADIUS * 25
-    );
+
+    if (city.population > 0) {
+      // draw the node name below the circle
+      renderContext.fillStyle = "black";
+      renderContext.font = "14px Arial";
+      renderContext.textAlign = "center";
+      renderContext.textBaseline = "top";
+      renderContext.fillText(
+        cities[i].name,
+        cities[i].location.x,
+        cities[i].location.y + NODE_RADIUS,
+        NODE_RADIUS * 25
+      );
+    }
     // draw good count above city
     renderContext.fillStyle = "black";
     renderContext.font = "10px Arial";
@@ -444,26 +470,44 @@ function drawCities() {
 
     renderContext.strokeStyle = "black";
     renderContext.setLineDash([5, 0]);
-    renderContext.lineWidth = 1;
-    renderContext.strokeStyle = "rgba(0,0,0,1)";
-    // draw arrow for each expor route
+    renderContext.lineWidth = 0.25;
+    renderContext.strokeStyle = "rgba(0,0,0,0.4)";
+    // count how many export routes to each neighbor
+    let exportCounts: { [key: number]: number } = {};
     for (let ex in city.ExportRoutes) {
       let route = city.ExportRoutes[ex];
-      drawArrowBetweenCircles(
-        renderContext,
-        {
-          x: city.location.x,
-          y: city.location.y,
-          radius: NODE_RADIUS,
-        },
-        {
-          x: route.end.location.x,
-          y: route.end.location.y,
-          radius: NODE_RADIUS,
-        },
-        10,
-        Math.PI / 8
-      );
+      if (exportCounts[route.end.id] == undefined) {
+        exportCounts[route.end.id] = 0;
+      }
+      exportCounts[route.end.id]++;
+    }
+    // draw an arrow for each neighbor with export route, and label the count
+    for (let neighbor of city.neighbors) {
+      if (exportCounts[neighbor.id] != undefined) {
+        renderContext.lineWidth = 0.25 * exportCounts[neighbor.id];
+        drawArrowBetweenCircles(
+          renderContext,
+          {
+            x: city.location.x,
+            y: city.location.y,
+            radius: NODE_RADIUS,
+          },
+          {
+            x: neighbor.location.x,
+            y: neighbor.location.y,
+            radius: NODE_RADIUS,
+          },
+          10,
+          Math.PI / 8,
+          3
+        );
+        // renderContext.fillText(
+        //   exportCounts[neighbor.id].toString(),
+        //   (city.location.x + neighbor.location.x) / 2,
+        //   (city.location.y + neighbor.location.y) / 2,
+        //   NODE_RADIUS * 25
+        // );
+      }
     }
 
     if (
@@ -485,12 +529,14 @@ function drawCities() {
     renderContext.textBaseline = "middle";
     // draw population to 1 decimal place
 
-    renderContext.fillText(
-      cities[i].population.toFixed(0).toString(),
-      cities[i].location.x,
-      cities[i].location.y,
-      NODE_RADIUS * 2
-    );
+    if (city.population > 0) {
+      renderContext.fillText(
+        cities[i].population.toFixed(0).toString(),
+        cities[i].location.x,
+        cities[i].location.y,
+        NODE_RADIUS * 2
+      );
+    }
   }
 }
 
@@ -499,18 +545,23 @@ function drawArrowBetweenCircles(
   circle1: { x: number; y: number; radius: number },
   circle2: { x: number; y: number; radius: number },
   arrowLength: number,
-  arrowAngle: number
+  arrowAngle: number,
+  perpendicularOffset: number
 ) {
   // Calculate the distance between the centers of the circles
   const dx = circle2.x - circle1.x;
   const dy = circle2.y - circle1.y;
   const distance = Math.sqrt(dx * dx + dy * dy);
 
+  // calculate perpendicular offset
+  const perpX = (-dy / distance) * perpendicularOffset;
+  const perpY = (dx / distance) * perpendicularOffset;
+
   // Calculate the coordinates of the points where the arrow intersects the circles
-  const x1 = circle1.x + (dx / distance) * circle1.radius;
-  const y1 = circle1.y + (dy / distance) * circle1.radius;
-  const x2 = circle2.x - (dx / distance) * circle2.radius;
-  const y2 = circle2.y - (dy / distance) * circle2.radius;
+  const x1 = circle1.x + (dx / distance) * circle1.radius + perpX;
+  const y1 = circle1.y + (dy / distance) * circle1.radius + perpY;
+  const x2 = circle2.x - (dx / distance) * circle2.radius + perpX;
+  const y2 = circle2.y - (dy / distance) * circle2.radius + perpY;
 
   // Calculate the angle of the arrow
   const angle = Math.atan2(y2 - y1, x2 - x1);

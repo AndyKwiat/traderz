@@ -66,13 +66,29 @@ export class City {
       return false;
     }
     this.goodsProduction[good]--;
+    target.goodsProduction[good]++;
+
+    // if we're importing the same good from the same city, just delete the import and we don't have to createa  new export since they cancel out
+    for (let r of this.ImportRoutes) {
+      if (r.goodType == good && r.start == target) {
+        this.ImportRoutes.splice(this.ImportRoutes.indexOf(r), 1);
+        // now delete the matching export route from teh target
+        for (let r2 of target.ExportRoutes) {
+          if (r2.goodType == good && r2.end == this) {
+            target.ExportRoutes.splice(target.ExportRoutes.indexOf(r2), 1);
+            break;
+          }
+        }
+        return true;
+      }
+    }
     let route = new TradeRoute(this, target, good, 1);
     this.ExportRoutes.push(route);
     target.ImportRoutes.push(route);
-    target.goodsProduction[good]++;
 
     return true;
   }
+
   public AttemptBuildHouse(): boolean {
     if (this.population < 1) {
       this.population++;
