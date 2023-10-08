@@ -195,7 +195,7 @@ export function redraw() {
 
     renderContext.strokeStyle = "rgba(0,0,0,0.08)";
     if (lane.IsLong()) {
-      renderContext.strokeStyle = "rgba(0,255,0,0.14)";
+      renderContext.strokeStyle = "rgba(0,255,0,0.5)";
     }
     renderContext.beginPath();
     renderContext.moveTo(lanes[j].start.location.x, lanes[j].start.location.y);

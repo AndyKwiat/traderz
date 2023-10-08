@@ -26,6 +26,7 @@ export class City {
   public hasPort: boolean = false;
 
   public neighbors: City[] = [];
+  public longNeighbors: City[] = [];
 
   constructor(
     public name: string,
@@ -70,6 +71,15 @@ export class City {
     }
     this.goodsProduction[STONE] -= 3;
     this.hasPort = true;
+    // push long neighbors into neighbors
+    for (let neighbor of this.longNeighbors) {
+      if (this.neighbors.includes(neighbor)) continue;
+      this.neighbors.push(neighbor);
+      neighbor.discovered = true;
+      if (neighbor.neighbors.includes(this)) continue;
+      neighbor.neighbors.push(this);
+    }
+
     return true;
   }
 
@@ -218,6 +228,9 @@ export function CreateNodes(
         if (!lane.IsLong()) {
           nodeA.neighbors.push(nodeB);
           nodeB.neighbors.push(nodeA);
+        } else {
+          nodeA.longNeighbors.push(nodeB);
+          nodeB.longNeighbors.push(nodeA);
         }
       }
     }
