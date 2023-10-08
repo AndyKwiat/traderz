@@ -6,11 +6,27 @@ abstract class State {
   OnCityClicked(city: City) {}
   OnCityGoodsBoxClicked(city: City, good: number) {}
   EscapeClicked(): void {}
+  OnPortButtonClicked(): void {
+    SetState(new BuildPort());
+  }
 }
 
 function SetState(state: State) {
   CurState = state;
   redraw();
+}
+
+class BuildPort extends State {
+  Message: string = "Click on a city to build a port";
+  OnCityClicked(city: City): void {
+    if (!city.discovered) return;
+    if (city.population < 1) return;
+    city.AttemptBuildPort();
+    redraw();
+  }
+  EscapeClicked(): void {
+    SetState(new BuildHouses());
+  }
 }
 class BuildHouses extends State {
   Message: string = "Click on a city to build a house";

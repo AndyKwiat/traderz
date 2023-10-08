@@ -1,8 +1,8 @@
 import { CreateNodes, NodeType, City, Ship, GoodsNames } from "./world.js";
 import { CurState, SetRedrawFunc } from "./states.js";
 import { Coord } from "./utils.js";
-const CITY_COUNT = 20;
-const AREA_RADIUS = 360;
+const CITY_COUNT = 60;
+const AREA_RADIUS = 650;
 const MIN_CITY_SPACING = 50;
 const NUM_SHIPS = 0;
 const NODE_RADIUS = 10;
@@ -168,11 +168,13 @@ export function redraw() {
   renderContext.lineWidth = 1;
 
   for (let j = 0; j < lanes.length; j++) {
+    let lane = lanes[j];
     // if both are not discovered don't show
     if (!lanes[j].start.discovered || !lanes[j].end.discovered) continue;
     // if both have no population don't show
     if (lanes[j].start.population <= 0 && lanes[j].end.population <= 0)
       continue;
+    if (lane.IsLong() && !(lane.start.hasPort || lane.end.hasPort)) continue;
 
     // if there's an import route between the start and end cities don't draw the lane
     let skip = false;
@@ -191,6 +193,10 @@ export function redraw() {
     }
     if (skip) continue;
 
+    renderContext.strokeStyle = "rgba(0,0,0,0.08)";
+    if (lane.IsLong()) {
+      renderContext.strokeStyle = "rgba(0,255,0,0.14)";
+    }
     renderContext.beginPath();
     renderContext.moveTo(lanes[j].start.location.x, lanes[j].start.location.y);
     renderContext.lineTo(lanes[j].end.location.x, lanes[j].end.location.y);
@@ -319,6 +325,13 @@ function updateStatus(key: string, value: string) {
     str += key + ": " + status[key] + ",";
   }
   document.getElementById("status-message")!.innerHTML = str;
+}
+// add onclick to port button
+document.getElementById("port-button")!.onclick = OnPortButtonClicked;
+
+function OnPortButtonClicked() {
+  CurState.OnPortButtonClicked();
+  updateStateMessage();
 }
 function OnCityGoodsBoxClicked(city: City, good: number) {
   CurState.OnCityGoodsBoxClicked(city, good);
@@ -466,6 +479,14 @@ function drawCities() {
       showGood(0, -2.1, -0.1);
       showGood(1, 0.8, -0.8);
       showGood(2, 1.7, 0.5);
+    }
+    if (city.hasPort) {
+      renderContext.fillText(
+        "⚓️",
+        city.location.x + NODE_RADIUS * -1,
+        city.location.y + NODE_RADIUS * -1,
+        NODE_RADIUS * 2
+      );
     }
 
     renderContext.strokeStyle = "black";

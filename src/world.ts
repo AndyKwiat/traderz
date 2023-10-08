@@ -23,6 +23,8 @@ export class City {
   public population: number = 0;
   public discovered: boolean = false;
 
+  public hasPort: boolean = false;
+
   public neighbors: City[] = [];
 
   constructor(
@@ -61,6 +63,16 @@ export class City {
       this.goodsProduction[FOOD] += 2;
     }
   }
+
+  public AttemptBuildPort(): boolean {
+    if (this.goodsProduction[STONE] < 3 || this.hasPort) {
+      return false;
+    }
+    this.goodsProduction[STONE] -= 3;
+    this.hasPort = true;
+    return true;
+  }
+
   public AttemptExport(good: number, target: City): boolean {
     if (this.goodsProduction[good] <= 0) {
       return false;
@@ -127,6 +139,10 @@ export class City {
   }
 }
 export class Lane {
+  public distance: number = this.start.location.distanceTo(this.end.location);
+  public IsLong(): boolean {
+    return this.distance > 150;
+  }
   constructor(public start: City, public end: City) {}
 }
 
@@ -190,17 +206,19 @@ export function CreateNodes(
   }
 
   let lanes: Lane[] = new Array();
-  // for every node, see the closest 4 nodes and add a lane if it doesn't already exist
+
   for (let i = 0; i < cities.length; i++) {
     let nodeA = cities[i];
     for (let j = i + 1; j < cities.length; j++) {
       let nodeB = cities[j];
       let distance = nodeA.location.distanceTo(nodeB.location);
-      if (distance < 150) {
+      if (distance < 300) {
         let lane = new Lane(nodeA, nodeB);
         lanes.push(lane);
-        nodeA.neighbors.push(nodeB);
-        nodeB.neighbors.push(nodeA);
+        if (!lane.IsLong()) {
+          nodeA.neighbors.push(nodeB);
+          nodeB.neighbors.push(nodeA);
+        }
       }
     }
   }
