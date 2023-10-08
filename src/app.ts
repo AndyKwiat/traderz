@@ -402,6 +402,7 @@ function drawCities() {
     renderContext.textAlign = "center";
     renderContext.textBaseline = "bottom";
     var showGood = (gn: number, x: number, y: number) => {
+      if (city.goodsProduction[gn] <= 0) return;
       let cx = cities[i].location.x + NODE_RADIUS * x;
       // gotta separate the text so the spacing is better
       renderContext.fillText(
@@ -440,6 +441,31 @@ function drawCities() {
       showGood(1, 0.8, -0.8);
       showGood(2, 1.7, 0.5);
     }
+
+    renderContext.strokeStyle = "black";
+    renderContext.setLineDash([5, 0]);
+    renderContext.lineWidth = 1;
+    renderContext.strokeStyle = "rgba(0,0,0,1)";
+    // draw arrow for each expor route
+    for (let ex in city.ExportRoutes) {
+      let route = city.ExportRoutes[ex];
+      drawArrowBetweenCircles(
+        renderContext,
+        {
+          x: city.location.x,
+          y: city.location.y,
+          radius: NODE_RADIUS,
+        },
+        {
+          x: route.end.location.x,
+          y: route.end.location.y,
+          radius: NODE_RADIUS,
+        },
+        10,
+        Math.PI / 8
+      );
+    }
+
     if (
       false && // turn this off for now
       (city.ImportRoutes.length > 0 || city.ExportRoutes.length > 0)
@@ -466,4 +492,47 @@ function drawCities() {
       NODE_RADIUS * 2
     );
   }
+}
+
+function drawArrowBetweenCircles(
+  renderContext: CanvasRenderingContext2D,
+  circle1: { x: number; y: number; radius: number },
+  circle2: { x: number; y: number; radius: number },
+  arrowLength: number,
+  arrowAngle: number
+) {
+  // Calculate the distance between the centers of the circles
+  const dx = circle2.x - circle1.x;
+  const dy = circle2.y - circle1.y;
+  const distance = Math.sqrt(dx * dx + dy * dy);
+
+  // Calculate the coordinates of the points where the arrow intersects the circles
+  const x1 = circle1.x + (dx / distance) * circle1.radius;
+  const y1 = circle1.y + (dy / distance) * circle1.radius;
+  const x2 = circle2.x - (dx / distance) * circle2.radius;
+  const y2 = circle2.y - (dy / distance) * circle2.radius;
+
+  // Calculate the angle of the arrow
+  const angle = Math.atan2(y2 - y1, x2 - x1);
+
+  // Draw the line between the circles
+  renderContext.beginPath();
+
+  renderContext.moveTo(x1, y1);
+  renderContext.lineTo(x2, y2);
+  renderContext.stroke();
+
+  // Draw the arrowhead
+  renderContext.beginPath();
+  renderContext.moveTo(x2, y2);
+  renderContext.lineTo(
+    x2 - arrowLength * Math.cos(angle - arrowAngle),
+    y2 - arrowLength * Math.sin(angle - arrowAngle)
+  );
+  renderContext.lineTo(
+    x2 - arrowLength * Math.cos(angle + arrowAngle),
+    y2 - arrowLength * Math.sin(angle + arrowAngle)
+  );
+  renderContext.closePath();
+  renderContext.fill();
 }

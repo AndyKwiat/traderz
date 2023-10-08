@@ -82,18 +82,26 @@ export class City {
     if (this.goodsProduction[WOOD] <= 0) {
       return false;
     }
-    let needFood = false;
-    if (this.population >= 3) {
-      needFood = true;
-    }
+    let needFood = true;
+    // if (this.population >= 3) {
+    //   needFood = true;
+    // }
 
     if (needFood && this.goodsProduction[FOOD] <= 0) {
+      return false;
+    }
+
+    let needStone = this.population >= 5;
+    if (needStone && this.goodsProduction[STONE] <= 0) {
       return false;
     }
 
     this.goodsProduction[WOOD]--;
     if (needFood) {
       this.goodsProduction[FOOD]--;
+    }
+    if (needStone) {
+      this.goodsProduction[STONE]--;
     }
     this.population++;
     this.IncreaseProduction();
