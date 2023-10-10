@@ -73,19 +73,29 @@ document.addEventListener("keydown", (event: KeyboardEvent) => {
   }
 });
 
-const nonStopTurnCheckbox = document.getElementById(
-  "turn-checkbox"
-) as HTMLInputElement;
-let nonStopTurn = false;
-nonStopTurnCheckbox.addEventListener("change", function () {
-  if (this.checked) {
-    console.log("Checkbox is checked.");
-    nonStopTurn = true;
-  } else {
-    console.log("Checkbox is not checked.");
-    nonStopTurn = false;
-  }
-});
+class Options {
+  public auto_import: boolean = false;
+}
+
+const options = new Options();
+setupOption(
+  "auto_import-checkbox",
+  () => options.auto_import,
+  (v) => (options.auto_import = v)
+);
+function setupOption(
+  name: string,
+  getter: () => boolean,
+  setter: (value: boolean) => void
+) {
+  const checkbox = document.getElementById(name) as HTMLInputElement;
+
+  checkbox.checked = getter();
+  checkbox.addEventListener("change", function () {
+    setter(this.checked);
+  });
+}
+
 export let LargeLoads = true;
 function ToggleLargeLoads() {
   LargeLoads = !LargeLoads;
@@ -195,7 +205,7 @@ export function redraw() {
 
     renderContext.strokeStyle = "rgba(0,0,0,0.08)";
     if (lane.IsLong()) {
-      renderContext.strokeStyle = "rgba(0,255,0,0.5)";
+      renderContext.strokeStyle = "rgba(255,50,0,0.6)";
     }
     renderContext.beginPath();
     renderContext.moveTo(lanes[j].start.location.x, lanes[j].start.location.y);
