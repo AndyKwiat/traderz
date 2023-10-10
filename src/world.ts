@@ -14,6 +14,7 @@ class TradeRoute {
     public amount: number
   ) {}
 }
+export let TotalExports: number = 0;
 
 export class City {
   public potentialGoodsProduction: number[] = new Array(NUM_GOODS).fill(0);
@@ -103,12 +104,14 @@ export class City {
             break;
           }
         }
+        TotalExports--;
         return true;
       }
     }
     let route = new TradeRoute(this, target, good, 1);
     this.ExportRoutes.push(route);
     target.ImportRoutes.push(route);
+    TotalExports++;
 
     return true;
   }
@@ -144,7 +147,15 @@ export class City {
       let amtLeft = item.Amount - this.goodsProduction[item.Good];
 
       let gotItem = false;
+      let set = new Set(this.neighbors);
+      // add neighbors of neighbors, except for this city
       for (let n of this.neighbors) {
+        for (let nn of n.neighbors) {
+          if (nn == this) continue;
+          set.add(nn);
+        }
+      }
+      for (let n of set) {
         while (amtLeft > 0) {
           if (!n.AttemptExport(item.Good, this)) {
             break;

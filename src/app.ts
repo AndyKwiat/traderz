@@ -1,4 +1,11 @@
-import { CreateNodes, NodeType, City, Ship, GoodsNames } from "./world.js";
+import {
+  CreateNodes,
+  NodeType,
+  City,
+  Ship,
+  GoodsNames,
+  TotalExports,
+} from "./world.js";
 import { CurState, SetRedrawFunc } from "./states.js";
 import { Coord } from "./utils.js";
 const CITY_COUNT = 60;
@@ -7,7 +14,10 @@ const MIN_CITY_SPACING = 50;
 const NUM_SHIPS = 0;
 const NODE_RADIUS = 10;
 
-SetRedrawFunc(redraw);
+SetRedrawFunc(() => {
+  updateStatus("TotalExports", TotalExports.toString());
+  redraw();
+});
 class TriggerBox {
   constructor(
     public x: number,
@@ -63,7 +73,7 @@ let stats: object;
 document.addEventListener("keydown", (event: KeyboardEvent) => {
   if (event.key === " ") {
     console.log("space bar pressed");
-    ToggleLargeLoads();
+    //
     //AdvanceTurn(cities, ships);
     redraw();
   }
@@ -103,10 +113,6 @@ function setupOption(
 }
 
 export let LargeLoads = true;
-function ToggleLargeLoads() {
-  LargeLoads = !LargeLoads;
-  updateStatus("LargeLoads", LargeLoads.toString());
-}
 
 // Function to handle mouse wheel event for scaling
 canvas.addEventListener("wheel", (event) => {
