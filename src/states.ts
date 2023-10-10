@@ -1,6 +1,6 @@
 import { City, GoodsNames, WOOD, STONE, FOOD } from "./world.js";
-import { LargeLoads } from "./app.js";
-let LargeLoadScalar = () => (LargeLoads ? 10 : 1);
+import { options } from "./app.js";
+let LargeLoadScalar = () => (options.LargeLoads ? 10 : 1);
 abstract class State {
   Message: string = "---";
   OnCityClicked(city: City) {}

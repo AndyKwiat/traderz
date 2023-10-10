@@ -1,5 +1,6 @@
 import { CityNames } from "./cityNames.js";
 import { Coord, getRandomPointInsideCircle } from "./utils.js";
+import { options } from "./app.js";
 const NUM_GOODS = 3;
 export const WOOD = 0;
 export const STONE = 1;
@@ -13,6 +14,7 @@ class TradeRoute {
     public amount: number
   ) {}
 }
+
 export class City {
   public potentialGoodsProduction: number[] = new Array(NUM_GOODS).fill(0);
   public goodsProduction: number[] = new Array(NUM_GOODS).fill(0);
@@ -117,35 +119,61 @@ export class City {
       this.IncreaseProduction();
       return true;
     }
-    if (this.goodsProduction[WOOD] <= 0) {
+    var need = Needs.Create(WOOD)
+      .Add(FOOD)
+      .AddIf(this.population > 5, STONE);
+
+    if (
+      !this.MeetsNeeds(need) &&
+      !(options.auto_import && this.AttemptImportNeeds(need))
+    ) {
       return false;
     }
-    let needFood = true;
-    // if (this.population >= 3) {
-    //   needFood = true;
-    // }
+    this.UseResources(need);
 
-    if (needFood && this.goodsProduction[FOOD] <= 0) {
-      return false;
-    }
-
-    let needStone = this.population >= 5;
-    if (needStone && this.goodsProduction[STONE] <= 0) {
-      return false;
-    }
-
-    this.goodsProduction[WOOD]--;
-    if (needFood) {
-      this.goodsProduction[FOOD]--;
-    }
-    if (needStone) {
-      this.goodsProduction[STONE]--;
-    }
     this.population++;
     this.IncreaseProduction();
     return true;
 
     return false;
+  }
+
+  public AttemptImportNeeds(n: Needs): boolean {
+    for (let item of n.Items) {
+      if (this.goodsProduction[item.Good] >= item.Amount) continue;
+      let amtLeft = item.Amount - this.goodsProduction[item.Good];
+
+      let gotItem = false;
+      for (let n of this.neighbors) {
+        while (amtLeft > 0) {
+          if (!n.AttemptExport(item.Good, this)) {
+            break;
+          }
+          amtLeft--;
+        }
+        if (amtLeft <= 0) {
+          gotItem = true;
+          break;
+        }
+      }
+      if (!gotItem) return false;
+    }
+    return true;
+  }
+
+  public UseResources(n: Needs) {
+    for (let i of n.Items) {
+      this.goodsProduction[i.Good] -= i.Amount;
+    }
+  }
+
+  public MeetsNeeds(n: Needs): boolean {
+    for (let i of n.Items) {
+      if (this.goodsProduction[i.Good] < i.Amount) {
+        return false;
+      }
+    }
+    return true;
   }
 }
 export class Lane {
@@ -154,6 +182,33 @@ export class Lane {
     return this.distance > 150;
   }
   constructor(public start: City, public end: City) {}
+}
+
+class Quant {
+  public Good: number;
+  public Amount: number;
+  constructor(good: number, amount: number) {
+    this.Good = good;
+    this.Amount = amount;
+  }
+}
+class Needs {
+  public Items: Quant[] = new Array();
+  public static Create(good: number, amount: number = 1): Needs {
+    let n = new Needs();
+    n.Items.push(new Quant(good, amount));
+    return n;
+  }
+  public Add(good: number, amount: number = 1): Needs {
+    this.Items.push(new Quant(good, amount));
+    return this;
+  }
+  public AddIf(condition: boolean, good: number, amount: number = 1): Needs {
+    if (condition) {
+      return this.Add(good, amount);
+    }
+    return this;
+  }
 }
 
 export enum NodeType {

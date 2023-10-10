@@ -74,14 +74,20 @@ document.addEventListener("keydown", (event: KeyboardEvent) => {
 });
 
 class Options {
-  public auto_import: boolean = false;
+  public auto_import: boolean = true;
+  public LargeLoads: boolean = true;
 }
 
-const options = new Options();
+export const options = new Options();
 setupOption(
   "auto_import-checkbox",
   () => options.auto_import,
   (v) => (options.auto_import = v)
+);
+setupOption(
+  "large-loads-checkbox",
+  () => options.LargeLoads,
+  (v) => (options.LargeLoads = v)
 );
 function setupOption(
   name: string,
