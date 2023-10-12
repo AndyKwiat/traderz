@@ -90,6 +90,13 @@ export class City {
     if (this.goodsProduction[good] <= 0) {
       return false;
     }
+    this.MustExport(good, target);
+    return true;
+  }
+  public MustExport(good: number, target: City) {
+    if (this.goodsProduction[good] <= 0) {
+      throw new Error("Can't export a good you don't have");
+    }
     this.goodsProduction[good]--;
     target.goodsProduction[good]++;
 
@@ -105,7 +112,7 @@ export class City {
           }
         }
         TotalExports--;
-        return true;
+        return;
       }
     }
     let route = new TradeRoute(this, target, good, 1);
@@ -113,7 +120,7 @@ export class City {
     target.ImportRoutes.push(route);
     TotalExports++;
 
-    return true;
+    return;
   }
 
   public AttemptBuildHouse(): boolean {
@@ -142,34 +149,54 @@ export class City {
   }
 
   public AttemptImportNeeds(n: Needs): boolean {
-    for (let item of n.Items) {
-      if (this.goodsProduction[item.Good] >= item.Amount) continue;
-      let amtLeft = item.Amount - this.goodsProduction[item.Good];
+    let nextInPath = new Map();
+    let workingSet: City[] = [];
 
-      let gotItem = false;
-      let set = new Set(this.neighbors);
-      // add neighbors of neighbors, except for this city
-      for (let n of this.neighbors) {
-        for (let nn of n.neighbors) {
-          if (nn == this) continue;
-          set.add(nn);
-        }
-      }
-      for (let n of set) {
-        while (amtLeft > 0) {
-          if (!n.AttemptExport(item.Good, this)) {
-            break;
-          }
-          amtLeft--;
-        }
-        if (amtLeft <= 0) {
-          gotItem = true;
-          break;
-        }
-      }
-      if (!gotItem) return false;
+    this.neighbors.forEach((n) => {
+      workingSet.push(n);
+    });
+    workingSet.forEach((n) => {
+      nextInPath.set(n, this);
+    });
+    let visited = new Set();
+    let needsLeft = n.CreateCopy();
+    for (let i of needsLeft.Items) {
+      i.Amount -= this.goodsProduction[i.Good];
+      i.Amount = Math.max(0, i.Amount);
     }
-    return true;
+    while (workingSet.length > 0) {
+      let current = workingSet.shift()!;
+      if (visited.has(current)) continue;
+      if (current.population < 1) continue;
+      visited.add(current);
+      for (let nn of current.neighbors) {
+        if (nn == this) continue;
+        if (nn.population < 1) continue;
+        if (!nn.discovered) continue;
+        if (visited.has(nn)) continue;
+
+        workingSet.push(nn);
+        nextInPath.set(nn, current);
+      }
+
+      needsLeft.Items.forEach((i) => {
+        while (i.Amount > 0 && current.goodsProduction[i.Good] > 0) {
+          let c = current;
+          while (c != this) {
+            let parent = nextInPath.get(c)!;
+            c.MustExport(i.Good, parent);
+            c = parent;
+          }
+          i.Amount--;
+        }
+      });
+
+      if (needsLeft.Items.every((i) => i.Amount == 0)) {
+        return true;
+      }
+    }
+
+    return false;
   }
 
   public UseResources(n: Needs) {
@@ -219,6 +246,14 @@ class Needs {
       return this.Add(good, amount);
     }
     return this;
+  }
+
+  public CreateCopy(): Needs {
+    let n = new Needs();
+    for (let i of this.Items) {
+      n.Items.push(new Quant(i.Good, i.Amount));
+    }
+    return n;
   }
 }
 

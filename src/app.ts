@@ -186,7 +186,6 @@ export function redraw() {
   renderContext.setLineDash([5, 5]);
   // make the line grey with transparency
 
-  renderContext.strokeStyle = "rgba(0,0,0,0.08)";
   renderContext.lineWidth = 1;
 
   for (let j = 0; j < lanes.length; j++) {
@@ -214,8 +213,7 @@ export function redraw() {
       }
     }
     if (skip) continue;
-
-    renderContext.strokeStyle = "rgba(0,0,0,0.08)";
+    renderContext.strokeStyle = "rgba(0,0,0,0.4)";
     if (lane.IsLong()) {
       renderContext.strokeStyle = "rgba(255,50,0,0.6)";
     }
