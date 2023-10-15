@@ -1,11 +1,12 @@
 import { CityNames } from "./cityNames.js";
 import { Coord, getRandomPointInsideCircle } from "./utils.js";
 import { options } from "./app.js";
-const NUM_GOODS = 3;
+const NUM_GOODS = 4;
 export const WOOD = 0;
 export const STONE = 1;
 export const FOOD = 2;
-export const GoodsNames = ["🪵", "🪨", "🌾"];
+export const METAL = 3;
+export const GoodsNames = ["🪵", "🪨", "🌾", "📏"];
 class TradeRoute {
   constructor(
     public start: City,
@@ -51,6 +52,8 @@ export class City {
         return this.goodsProduction[FOOD];
       case NodeType.Stone:
         return this.goodsProduction[STONE];
+      case NodeType.Metal:
+        return this.goodsProduction[METAL];
       default:
         return 0;
     }
@@ -65,6 +68,9 @@ export class City {
     }
     if (this.type == NodeType.Plains) {
       this.goodsProduction[FOOD] += 2;
+    }
+    if (this.type == NodeType.Metal) {
+      this.goodsProduction[METAL] += 2;
     }
   }
 
@@ -170,6 +176,7 @@ export class City {
       if (current.population < 1) continue;
       visited.add(current);
       for (let nn of current.neighbors) {
+        if (workingSet.includes(nn)) continue;
         if (nn == this) continue;
         if (nn.population < 1) continue;
         if (!nn.discovered) continue;
@@ -262,6 +269,7 @@ export enum NodeType {
   Forest = 1,
   Plains = 2,
   Stone = 3,
+  Metal = 4,
 }
 
 export class Ship {
@@ -296,10 +304,12 @@ export function CreateNodes(
   for (let i = 0; i < nodeCount; i++) {
     let pick = Math.random();
     let type = NodeType.Forest;
-    if (pick < 0.33) {
+    if (pick < 0.3) {
       type = NodeType.Plains;
-    } else if (pick < 0.66) {
+    } else if (pick < 0.6) {
       type = NodeType.Stone;
+    } else if (pick < 0.7) {
+      type = NodeType.Metal;
     }
     let n = new City(i.toString(), i, getRandomPointInsideCircle(radius), type);
     cities.push(n);

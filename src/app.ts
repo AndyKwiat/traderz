@@ -430,6 +430,9 @@ function drawCities() {
         case NodeType.Stone:
           clr = "grey";
           break;
+        case NodeType.Metal:
+          clr = "cyan";
+          break;
       }
     }
 
@@ -499,6 +502,7 @@ function drawCities() {
       showGood(0, -2.1, -0.1);
       showGood(1, 0.8, -0.8);
       showGood(2, 1.7, 0.5);
+      showGood(3, -2.1, 1.7);
     }
     if (city.hasPort) {
       renderContext.fillText(
