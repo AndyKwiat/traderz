@@ -503,11 +503,21 @@ function drawCities() {
       showGood(1, 0.8, -0.8);
       showGood(2, 1.7, 0.5);
       showGood(3, -2.1, 1.7);
+      showGood(4, 1.2, 1.7);
     }
     if (city.hasPort) {
       renderContext.fillText(
         "⚓️",
         city.location.x + NODE_RADIUS * -1,
+        city.location.y + NODE_RADIUS * -1,
+        NODE_RADIUS * 2
+      );
+    }
+
+    if (city.hasWorkshop) {
+      renderContext.fillText(
+        "🔥",
+        city.location.x + NODE_RADIUS * +1,
         city.location.y + NODE_RADIUS * -1,
         NODE_RADIUS * 2
       );

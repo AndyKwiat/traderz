@@ -1,12 +1,13 @@
 import { CityNames } from "./cityNames.js";
 import { Coord, getRandomPointInsideCircle } from "./utils.js";
 import { options } from "./app.js";
-const NUM_GOODS = 4;
+const NUM_GOODS = 5;
 export const WOOD = 0;
 export const STONE = 1;
 export const FOOD = 2;
 export const METAL = 3;
-export const GoodsNames = ["🪵", "🪨", "🌾", "📏"];
+export const TOOLS = 4;
+export const GoodsNames = ["🪵", "🪨", "🌾", "📏", "🛠️"];
 class TradeRoute {
   constructor(
     public start: City,
@@ -28,6 +29,7 @@ export class City {
   public discovered: boolean = false;
 
   public hasPort: boolean = false;
+  public hasWorkshop: boolean = false;
 
   public neighbors: City[] = [];
   public longNeighbors: City[] = [];
@@ -88,6 +90,24 @@ export class City {
       if (neighbor.neighbors.includes(this)) continue;
       neighbor.neighbors.push(this);
     }
+
+    return true;
+  }
+
+  public AttemptBuildWorkshop(): boolean {
+    if (this.hasWorkshop) {
+      return false;
+    }
+    var need = Needs.Create(WOOD).Add(FOOD).Add(STONE, 3);
+
+    if (
+      !this.MeetsNeeds(need) &&
+      !(options.auto_import && this.AttemptImportNeeds(need))
+    ) {
+      return false;
+    }
+    this.UseResources(need);
+    this.hasWorkshop = true;
 
     return true;
   }

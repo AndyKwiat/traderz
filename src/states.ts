@@ -28,6 +28,18 @@ class BuildPort extends State {
     SetState(new BuildHouses());
   }
 }
+class BuildWorkshop extends State {
+  Message: string = "Click on a city to build a workshop";
+  OnCityClicked(city: City): void {
+    if (!city.discovered) return;
+    if (city.population < 1) return;
+    city.AttemptBuildWorkshop();
+    redraw();
+  }
+  EscapeClicked(): void {
+    SetState(new BuildHouses());
+  }
+}
 class BuildHouses extends State {
   Message: string = "Click on a city to build a house";
   OnCityClicked(city: City): void {
