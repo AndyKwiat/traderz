@@ -314,23 +314,46 @@ export class Ship {
     return new Ship(name, id, city.location, city, null);
   }
 }
+class LotteryRNG<T> {
+  private items: T[] = [];
+  private curIndex = -1;
+  public Add(item: T, count: number): LotteryRNG<T> {
+    for (let i = 0; i < count; i++) {
+      this.items.push(item);
+    }
+    return this;
+  }
+  public Pick(): T {
+    if (this.curIndex == -1) {
+      // shuffle items
+      for (let i = 0; i < this.items.length; i++) {
+        let swapIndex = Math.floor(Math.random() * this.items.length);
+        let temp = this.items[i];
+        this.items[i] = this.items[swapIndex];
+        this.items[swapIndex] = temp;
+      }
+    }
+    this.curIndex++;
+    this.curIndex = this.curIndex % this.items.length;
 
+    return this.items[this.curIndex];
+  }
+}
 export function CreateNodes(
   nodeCount: number,
   radius: number,
   citySpacing: number
 ): { cities: City[]; lanes: Lane[] } {
   let cities: City[] = [];
+  let rng = new LotteryRNG()
+    .Add(NodeType.Forest, 30)
+    .Add(NodeType.Plains, 30)
+    .Add(NodeType.Stone, 30)
+    .Add(NodeType.Metal, 10);
+
   for (let i = 0; i < nodeCount; i++) {
-    let pick = Math.random();
-    let type = NodeType.Forest;
-    if (pick < 0.3) {
-      type = NodeType.Plains;
-    } else if (pick < 0.6) {
-      type = NodeType.Stone;
-    } else if (pick < 0.7) {
-      type = NodeType.Metal;
-    }
+    let type: NodeType = rng.Pick();
+
     let n = new City(i.toString(), i, getRandomPointInsideCircle(radius), type);
     cities.push(n);
   }
