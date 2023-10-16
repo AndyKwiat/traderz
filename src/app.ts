@@ -348,11 +348,18 @@ function updateStatus(key: string, value: string) {
 }
 // add onclick to port button
 document.getElementById("port-button")!.onclick = OnPortButtonClicked;
+document.getElementById("workshop-button")!.onclick = OnWorkshopButtonClicked;
 
 function OnPortButtonClicked() {
   CurState.OnPortButtonClicked();
   updateStateMessage();
 }
+
+function OnWorkshopButtonClicked() {
+  CurState.OnWorkshopButtonClicked();
+  updateStateMessage();
+}
+
 function OnCityGoodsBoxClicked(city: City, good: number) {
   CurState.OnCityGoodsBoxClicked(city, good);
   updateStateMessage();

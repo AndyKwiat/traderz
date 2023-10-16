@@ -9,6 +9,10 @@ abstract class State {
   OnPortButtonClicked(): void {
     SetState(new BuildPort());
   }
+
+  OnWorkshopButtonClicked(): void {
+    SetState(new BuildWorkshop());
+  }
 }
 
 function SetState(state: State) {
@@ -21,7 +25,9 @@ class BuildPort extends State {
   OnCityClicked(city: City): void {
     if (!city.discovered) return;
     if (city.population < 1) return;
-    city.AttemptBuildPort();
+    if (city.AttemptBuildPort()) {
+      SetState(new BuildHouses());
+    }
     redraw();
   }
   EscapeClicked(): void {
@@ -49,6 +55,9 @@ class BuildHouses extends State {
       if (i == 1 && city.population == 1) break;
       if (i > 0 && city.primaryGoodsCount() < 2) {
         break;
+      }
+      if (city.AttemptUseTools()) {
+        continue;
       }
       built = city.AttemptBuildHouse() || built;
     }
@@ -91,7 +100,7 @@ class PickExportTarget extends State {
     }
 
     for (let i = 0; i < LargeLoadScalar(); i++) {
-      if (i > 0 && this.startCity.goodsProduction[this.goodToExport] < 2) {
+      if (this.startCity.goodsProduction[this.goodToExport] <= 0) {
         break;
       }
       this.startCity.AttemptExport(this.goodToExport, city);

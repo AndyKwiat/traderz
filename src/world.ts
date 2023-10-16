@@ -30,6 +30,7 @@ export class City {
 
   public hasPort: boolean = false;
   public hasWorkshop: boolean = false;
+  public toolsUsed = 0;
 
   public neighbors: City[] = [];
   public longNeighbors: City[] = [];
@@ -98,7 +99,7 @@ export class City {
     if (this.hasWorkshop) {
       return false;
     }
-    var need = Needs.Create(WOOD).Add(FOOD).Add(STONE, 3);
+    var need = Needs.Create(WOOD).Add(FOOD).Add(STONE).Add(METAL, 3);
 
     if (
       !this.MeetsNeeds(need) &&
@@ -108,6 +109,8 @@ export class City {
     }
     this.UseResources(need);
     this.hasWorkshop = true;
+    this.goodsProduction[TOOLS] += 10;
+    this.population++;
 
     return true;
   }
@@ -149,6 +152,21 @@ export class City {
     return;
   }
 
+  public AttemptUseTools(): boolean {
+    if (this.goodsProduction[TOOLS] < 1) {
+      return false;
+    }
+    if (this.population < 1) {
+      return false;
+    }
+    if (this.toolsUsed >= this.population) {
+      return false;
+    }
+    this.toolsUsed++;
+    this.IncreaseProduction();
+    this.goodsProduction[TOOLS]--;
+    return true;
+  }
   public AttemptBuildHouse(): boolean {
     if (this.population < 1) {
       this.population++;
@@ -345,11 +363,11 @@ export function CreateNodes(
   citySpacing: number
 ): { cities: City[]; lanes: Lane[] } {
   let cities: City[] = [];
-  let rng = new LotteryRNG()
-    .Add(NodeType.Forest, 30)
-    .Add(NodeType.Plains, 30)
-    .Add(NodeType.Stone, 30)
-    .Add(NodeType.Metal, 10);
+  let rng = new LotteryRNG<NodeType>()
+    .Add(NodeType.Forest, 3)
+    .Add(NodeType.Plains, 3)
+    .Add(NodeType.Stone, 3)
+    .Add(NodeType.Metal, 1);
 
   for (let i = 0; i < nodeCount; i++) {
     let type: NodeType = rng.Pick();
