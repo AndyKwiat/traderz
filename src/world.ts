@@ -78,10 +78,18 @@ export class City {
   }
 
   public AttemptBuildPort(): boolean {
-    if (this.goodsProduction[STONE] < 3 || this.hasPort) {
+    if (this.hasPort) {
       return false;
     }
-    this.goodsProduction[STONE] -= 3;
+    let need = Needs.Create(STONE, 3).Add(WOOD, 2);
+    if (
+      !this.MeetsNeeds(need) &&
+      !(options.auto_import && this.AttemptImportNeeds(need))
+    ) {
+      return false;
+    }
+    this.UseResources(need);
+
     this.hasPort = true;
     // push long neighbors into neighbors
     for (let neighbor of this.longNeighbors) {

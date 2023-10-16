@@ -15,7 +15,23 @@ const NUM_SHIPS = 0;
 const NODE_RADIUS = 10;
 
 SetRedrawFunc(() => {
+  let numGoods = GoodsNames.length;
+  let goodTotals = new Array(numGoods).fill(0);
+  let pop = 0;
+  for (let c = 0; c < cities.length; c++) {
+    pop += cities[c].population;
+    for (let i = 0; i < numGoods; i++) {
+      goodTotals[i] += cities[c].goodsProduction[i];
+    }
+  }
+  for (let i = 0; i < numGoods; i++) {
+    updateStatus(GoodsNames[i], goodTotals[i].toString());
+  }
   updateStatus("TotalExports", TotalExports.toString());
+  updateStatus("Population", pop.toString());
+  updateStatus("ScoreDiv", ((pop * 100) / TotalExports).toFixed(0).toString());
+  updateStatus("ScoreSub", (pop * 100 - TotalExports).toString());
+
   redraw();
 });
 class TriggerBox {
@@ -342,7 +358,7 @@ function updateStatus(key: string, value: string) {
   status[key] = value;
   let str = "";
   for (let key in status) {
-    str += key + ": " + status[key] + ",";
+    str += key + ": " + status[key] + "  ";
   }
   document.getElementById("status-message")!.innerHTML = str;
 }
