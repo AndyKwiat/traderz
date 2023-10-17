@@ -62,7 +62,10 @@ export class City {
     }
   }
 
-  private IncreaseProduction() {
+  private IncreaseProduction(isTool = false) {
+    if (!isTool && this.population >= 10) {
+      return;
+    }
     if (this.type == NodeType.Forest) {
       this.goodsProduction[WOOD] += 2;
     }
@@ -171,7 +174,7 @@ export class City {
       return false;
     }
     this.toolsUsed++;
-    this.IncreaseProduction();
+    this.IncreaseProduction(true);
     this.goodsProduction[TOOLS]--;
     return true;
   }

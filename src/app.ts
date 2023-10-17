@@ -31,18 +31,20 @@ SetRedrawFunc(() => {
   }
   updateStatus("TotalExports", TotalExports.toString());
   updateStatus("Population", pop.toString());
-  updateStatus(
-    "CityCount",
-    linq
-      .Where((c) => c!.population > 0)
-      .Count()
-      .toString()
-  );
+  let cityCount = linq.Where((c) => c!.population > 0).Count();
+  updateStatus("CityCount", cityCount.toString());
   // use linq to pick cities with population > 5 and add up their population
   let cash = linq
     .Where((c) => c!.population > 5)
     .Select((c) => c!.population - 5)
     .Sum();
+  cash += linq
+    .Where((c) => c!.population > 10)
+    .Select((c) => c!.population - 10)
+    .Sum();
+  cash *= 10;
+  cash -= cityCount * 5;
+  cash -= TotalExports;
   updateStatus("Cash", cash.toString());
   updateStatus("ScoreDiv", ((pop * 100) / TotalExports).toFixed(0).toString());
   updateStatus("ScoreSub", (pop * 100 - TotalExports).toString());
