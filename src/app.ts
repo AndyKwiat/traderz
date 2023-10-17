@@ -32,6 +32,7 @@ SetRedrawFunc(() => {
   updateStatus("TotalExports", TotalExports.toString());
   updateStatus("Population", pop.toString());
   let cityCount = linq.Where((c) => c!.population > 0).Count();
+
   updateStatus("CityCount", cityCount.toString());
   // use linq to pick cities with population > 5 and add up their population
   let cash = linq

@@ -224,6 +224,14 @@ export class City {
       if (visited.has(current)) continue;
       if (current.population < 1) continue;
       visited.add(current);
+
+      let hops = 0;
+      let c = current;
+      while (c != this) {
+        hops++;
+        c = nextInPath.get(c)!;
+      }
+
       for (let nn of current.neighbors) {
         if (workingSet.includes(nn)) continue;
         if (nn == this) continue;
@@ -236,6 +244,7 @@ export class City {
       }
 
       needsLeft.Items.forEach((i) => {
+        if (i.Good == FOOD && hops > 2) return;
         while (i.Amount > 0 && current.goodsProduction[i.Good] > 0) {
           let c = current;
           while (c != this) {
