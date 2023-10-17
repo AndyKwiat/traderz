@@ -1,6 +1,6 @@
-import { CityNames } from "./cityNames.js";
-import { Coord, getRandomPointInsideCircle } from "./utils.js";
-import { options } from "./app.js";
+import { CityNames } from "./cityNames";
+import { Coord, getRandomPointInsideCircle } from "./utils";
+import { options } from "./app";
 const NUM_GOODS = 5;
 export const WOOD = 0;
 export const STONE = 1;

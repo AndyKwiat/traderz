@@ -1,5 +1,5 @@
-import { City, GoodsNames, WOOD, STONE, FOOD } from "./world.js";
-import { options } from "./app.js";
+import { City, GoodsNames, WOOD, STONE, FOOD } from "./world";
+import { options } from "./app";
 let LargeLoadScalar = () => (options.LargeLoads ? 10 : 1);
 abstract class State {
   Message: string = "---";

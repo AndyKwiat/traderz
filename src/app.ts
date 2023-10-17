@@ -5,9 +5,11 @@ import {
   Ship,
   GoodsNames,
   TotalExports,
-} from "./world.js";
-import { CurState, SetRedrawFunc } from "./states.js";
-import { Coord } from "./utils.js";
+} from "./world";
+import { CurState, SetRedrawFunc } from "./states";
+import { Coord } from "./utils";
+import { List } from "linqts";
+
 const CITY_COUNT = 60;
 const AREA_RADIUS = 650;
 const MIN_CITY_SPACING = 50;
@@ -29,6 +31,19 @@ SetRedrawFunc(() => {
   }
   updateStatus("TotalExports", TotalExports.toString());
   updateStatus("Population", pop.toString());
+  updateStatus(
+    "CityCount",
+    linq
+      .Where((c) => c!.population > 0)
+      .Count()
+      .toString()
+  );
+  // use linq to pick cities with population > 5 and add up their population
+  let cash = linq
+    .Where((c) => c!.population > 5)
+    .Select((c) => c!.population - 5)
+    .Sum();
+  updateStatus("Cash", cash.toString());
   updateStatus("ScoreDiv", ((pop * 100) / TotalExports).toFixed(0).toString());
   updateStatus("ScoreSub", (pop * 100 - TotalExports).toString());
 
@@ -59,7 +74,9 @@ let panY = canvas.height / 2;
 let scale = 1;
 
 let { cities, lanes } = CreateNodes(CITY_COUNT, AREA_RADIUS, MIN_CITY_SPACING);
+
 cities[Math.floor(CITY_COUNT / 2)].discovered = true;
+let linq = new List<City>(cities);
 let ships: Ship[] = [];
 // ships.push(Ship.CreateShip("Laska", cities[CITY_COUNT / 2]));
 // for (let i = 0; i < NUM_SHIPS - 1; i++) {

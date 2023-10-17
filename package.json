@@ -3,17 +3,21 @@
     "@types/node": "^20.5.9",
     "node-gyp": "^9.4.0",
     "nodemon": "^3.0.1",
+    "ts-loader": "^9.5.0",
     "ts-node": "^10.9.1",
     "typescript": "^5.2.2",
-    "webpack": "^5.88.2",
-    "webpack-cli": "^5.1.4"
+    "webpack": "^5.89.0",
+    "webpack-cli": "^5.1.4",
+    "webpack-dev-server": "^4.15.1"
   },
   "dependencies": {
-    "esbuild": "0.19.2"
+    "esbuild": "0.19.2",
+    "linqts": "^1.15.0"
   },
   "scripts": {
     "dev": "nodemon",
-    "start": "tsc",
+    "d2": "webpack --mode development",
+    "start": "webpack --mode development",
     "build": "tsc && mkdir -p dist && mkdir -p dist/bin && cp bin/*.js dist/bin && cp index.html dist && cp favicon.ico dist && cp shipblue.png dist"
   },
   "packageManager": "yarn@3.6.3"
