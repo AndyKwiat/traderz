@@ -64,6 +64,10 @@ class BuildHouses extends State {
     if (built) {
       for (let neighbor of city.neighbors) {
         neighbor.discovered = true;
+        neighbor.seen = true;
+      }
+      for (let ln of city.longNeighbors) {
+        ln.seen = true;
       }
     }
     redraw();

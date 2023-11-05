@@ -10,9 +10,9 @@ import { CurState, SetRedrawFunc } from "./states";
 import { Coord } from "./utils";
 import { List } from "linqts";
 
-const CITY_COUNT = 60;
-const AREA_RADIUS = 650;
-const MIN_CITY_SPACING = 50;
+const CITY_COUNT = 200;
+const AREA_RADIUS = 1000;
+const MIN_CITY_SPACING = 25;
 const NUM_SHIPS = 0;
 const NODE_RADIUS = 10;
 
@@ -477,6 +477,8 @@ function drawCities() {
           clr = "cyan";
           break;
       }
+    } else if (!city.seen) {
+      //  continue;
     }
 
     renderContext.fillStyle = clr;

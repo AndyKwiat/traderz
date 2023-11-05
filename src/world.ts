@@ -27,6 +27,7 @@ export class City {
 
   public population: number = 0;
   public discovered: boolean = false;
+  public seen: boolean = false;
 
   public hasPort: boolean = false;
   public hasWorkshop: boolean = false;
